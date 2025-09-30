@@ -1,0 +1,2114 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ko"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://jnu-econovation.github.io/jekyll-theme-yat/feed.xml" rel="self" type="application/atom+xml" /><link href="https://jnu-econovation.github.io/jekyll-theme-yat/" rel="alternate" type="text/html" hreflang="ko" /><updated>2025-09-30T15:48:34+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/feed.xml</id><title type="html">ECONOVATION</title><subtitle>IT 개발동아리 에코노베이션입니다.</subtitle><author><name>JNU-econovation</name></author><entry><title type="html">웹뷰 브리지 라이브러리 개발 기록</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/tech/2025/09/16/%EC%9B%B9%EB%B7%B0-%EB%B8%8C%EB%A6%AC%EC%A7%80-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-%EA%B0%9C%EB%B0%9C-%EA%B8%B0%EB%A1%9D.html" rel="alternate" type="text/html" title="웹뷰 브리지 라이브러리 개발 기록" /><published>2025-09-16T00:00:00+09:00</published><updated>2025-09-16T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/tech/2025/09/16/%EC%9B%B9%EB%B7%B0%20%EB%B8%8C%EB%A6%AC%EC%A7%80%20%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC%20%EA%B0%9C%EB%B0%9C%20%EA%B8%B0%EB%A1%9D</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/tech/2025/09/16/%EC%9B%B9%EB%B7%B0-%EB%B8%8C%EB%A6%AC%EC%A7%80-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-%EA%B0%9C%EB%B0%9C-%EA%B8%B0%EB%A1%9D.html"><![CDATA[<h1 id="section">웹뷰 브리지 라이브러리 개발 기록</h1>
+
+<p><img src="https://velog.velcdn.com/images/dubu1001/post/33cd9818-804e-4b83-a65a-8f3b90fc884c/image.png" alt="시작" /></p>
+
+<h1 id="section-1">배경</h1>
+<p>안녕하십니까? 저는 에코노베이션 26기 박건규입니다. 저는 25년도 상반기 프로젝트로 안전한 산행을 위한 앱, 산결 어플의 프론트엔드 개발을 진행하였습니다. 이 과정에서 단 한번도 해보지 못했던 앱 개발을 진행해야만 했고, 친숙한 리액트 문법을 사용할 수 있는 리액트 네이티브를 선택하게 되었습니다. 그리고 빠른 사용자 테스트 진행을 위해서 화면 대부분을 웹뷰를 통해 구현하기로 하였습니다.</p>
+
+<blockquote>
+  <p><strong>[프로젝트 산결을 소개합니다! 🙋]</strong> <br />
+여러분들은 등산을 좋아하시나요 🙂 많은 2~30대 분들은 등산 비율이 높지 않지만, 사고 비율은 다른 연령대에 비해서 가장 높다는 사실 알고계신가요? 저희는 이 문제점에 주목하여, 등산을 즐겁게 할 수 있도록 하면서 등산 과정에서 발생할 수 있는 사고 예방, 감지 및 구조 요청을 돕는 앱, 산결을 개발하고 있습니다! <br />
+[앱 깃허브 링크]:(https://github.com/JNU-econovation/Soop-APP) <br />
+[웹 깃허브 링크]:(https://github.com/JNU-econovation/Soop-WEB) <br />
+현재는 앱과 웹을 <a href="https://github.com/JNU-econovation/Sangyeol-FE">모노레포</a>로 관리하고있습니다! <br /></p>
+</blockquote>
+
+<h1 id="section-2">웹뷰와 네이티브 앱 간의 통신</h1>
+
+<p>우선 웹뷰를 띄우기 위해서는 <a href="https://github.com/react-native-webview/react-native-webview">Webview 라이브러리</a>를 사용하는 방법이 가장 대중적입니다.</p>
+
+<p>웹뷰를 사용할 때에는 Webview 컴포넌트에 보여주고 싶은 웹의 주소를 source로 넘겨주시면 됩니다.</p>
+
+<p><img src="https://github.com/geongyu09/geongyu09.github.io/blob/dev/public/assets/blog/webviewThreeWayHandshake/%EC%9B%B9%EB%B7%B0%EB%9E%80.png?raw=true" alt="웹뷰란?" /></p>
+
+<p>JS는 웹과 앱 두 환경에서 돌아가지만, 결국 하나의 서비스를 이루게 됩니다. 이에 따라서 하나의 통일된 사용자 경험을 주는 것이 중요합니다. 이를 위해 웹과 앱은 서로 필요한 정보들을 소통해야 하는 상황들이 많이 발생하게 됩니다. 웹뷰와 네이티브 앱 간의 통신을 위해서는 아래와 같은 방식을 사용하실 수 있습니다.</p>
+
+<h2 id="section-3">네이티브 앱에서 웹뷰로 메시지 보내기</h2>
+
+<p>네이티브 앱에서 웹뷰로 메시지를 보내려면 <code class="language-plaintext highlighter-rouge">WebView</code> 컴포넌트의 <code class="language-plaintext highlighter-rouge">postMessage</code> 메서드를 사용하실 수 있습니다. 이 메서드는 웹뷰 내의 JavaScript 코드로 메시지를 전달합니다. 예를 들어, 네이티브 앱에서 다음과 같이 메시지를 보내실 수 있습니다.</p>
+
+<pre>
+  <code class="jsx">
+    import React from 'react';
+    import { WebView } from 'react-native-webview'; 
+    import { View, Button } from 'react-native';
+
+    const MyWebView = () =&gt; {
+      const webviewRef = React.useRef(null);
+
+      const sendMessageToWebView = () =&gt; {
+        if (webviewRef.current) {
+          webviewRef.current.postMessage('Hello from Native App!');
+        }
+      };
+
+      return (
+        &lt;View style=&gt;
+          &lt;WebView
+            ref={webviewRef}
+            source=
+          /&gt;
+          &lt;Button title="Send Message to WebView" onPress={sendMessageToWebView} /&gt;
+        &lt;/View&gt;
+      );
+    };
+    export default MyWebView;
+  </code>
+</pre>
+
+<p>이렇게 보낸 메시지는 웹 내에서 <code class="language-plaintext highlighter-rouge">window.ReactNativeWebView.postMessage</code>를 통해 받으실 수 있습니다.</p>
+
+<pre>
+  <code class="jsx">
+    // 웹 내에서 메시지 받기
+    window.addEventListener('message', (event) =&gt; {
+      console.log('Received message from Native App:', event.data);
+    });
+  </code>
+</pre>
+
+<p><img src="https://github.com/geongyu09/geongyu09.github.io/blob/dev/public/assets/blog/webviewThreeWayHandshake/appToWeb.png?raw=true" alt="앱에서 웹으로 보내기" /></p>
+
+<p>반대로 웹에서 네이티브 앱으로 메시지를 보내는 경우는 postMessage를 사용하시면 됩니다.</p>
+
+<pre>
+  <code class="jsx">
+    window.ReactNativeWebView.postMessage('Hello from Web!');
+  </code>
+</pre>
+
+<p>앱에서는 이를 Webview의 <code class="language-plaintext highlighter-rouge">onMessage</code> 이벤트 핸들러를 통해 받으실 수 있습니다.</p>
+
+<pre>
+  <code class="jsx">
+    &lt;WebView
+      ref={webViewRef}
+      source=
+      onMessage={(event) =&gt; {
+        console.log('Received message from WebView:', event.nativeEvent.data);
+      }}
+  </code>
+</pre>
+
+<p><img src="https://github.com/geongyu09/geongyu09.github.io/blob/dev/public/assets/blog/webviewThreeWayHandshake/webToApp.png?raw=true" alt="웹에서 앱으로 보내기" /></p>
+
+<p>웹과 앱이 서로 메시지를 주고 받는 것은 정말 코드 몇 줄로 간단히 구현이 가능합니다. 다만 이를 그대로 사용할 수는 없었는데요. 실제 서비스를 개발하다보면 이보다 훨씬 많은 경우를 고려해야만 합니다.!</p>
+
+<h1 id="section-4">기존 이벤트 기반 통신의 문제점들</h1>
+
+<p>아직 앱 개발을 많이 해보지 않은 짧은 식견으로 생각한 문제점은 다음과 같습니다.</p>
+
+<ol>
+  <li>
+    <p>웹과 앱 간의 메시지 형식을 정하기 어렵습니다.</p>
+  </li>
+  <li>
+    <p>이벤트 기반 코드들은 전부 리액트와 생명 주기가 맞지 않는 사이드 이팩트들입니다.</p>
+  </li>
+  <li>
+    <p>앱에서 웹으로 메시지를 보내는 경우, 웹이 로딩되지 않은 상태에서 메시지를 보내면 메시지를 받지 못하게 됩니다.</p>
+  </li>
+  <li>
+    <p>서로간의 통신에서 response가 존재하지 않아 전달이 올바르게 되었는지, 혹은 에러가 발생했는지를 알 수가 없습니다.</p>
+  </li>
+</ol>
+
+<p>분명히 저뿐만 아니라 다른 개발자분들도 동일하게 느꼈을 것이라 생각합니다. 그러하여 다양한 라이브러리를 찾아보았는데, 생각보다 라이브러리가 많지 않았습니다. 정말 잘 만들어진 <a href="https://github.com/gronxb/webview-bridge">FE conf 에서 발표된 라이브러리</a>가 있었지만, 앱을 처음 개발하는 저의 입장에서는 가볍게 제게 필요한 기능만을 제공하는 저만의 코드가 있기를 바랐습니다. 그리하여 직접 라이브러리를 개발하기로 하였습니다.</p>
+
+<p>(새로운 라이브러리를 또 공부해서 사용하는 것보다는 제가 필요한 기능만을 가진 가벼운 라이브러리를 만드는 것이 시간적, 개발적으로나 훨씬 비용이 적게 들 것으로 예상하였습니다!)</p>
+
+<h1 id="section-5">라이브러리 개발</h1>
+
+<h2 id="section-6">라이브러리의 목표</h2>
+
+<p>라이브러리의 목표는 웹과 네이티브 앱 간의 통신 로직을 간단하게 작성할 수 있도록 도와주는 것입니다. 이를 위해 다음과 같은 기능을 제공하고자 합니다.</p>
+
+<ol>
+  <li>
+    <p><strong>메시지 타입 정의</strong>: 웹과 앱 간의 메시지 타입을 정의할 수 있는 기능을 제공합니다. 정한 타입을 통하여 메시지의 형식을 일관되고, 타입 세이프하게 관리할 수 있습니다.</p>
+  </li>
+  <li>
+    <p><strong>리액트 훅 사용</strong>: 리액트 훅을 사용하여 메시지를 보내고 받을 수 있는 간단한 API를 제공합니다. 이를 통해 개발자는 복잡한 사이드 이팩트 관리 없이 메시지를 주고 받을 수 있습니다.</p>
+  </li>
+  <li>
+    <p><strong>응답 처리</strong>: 메시지를 보낸 후 응답을 받을 수 있는 기능을 제공합니다. 이를 통해 메시지가 올바르게 전달되었는지 확인할 수 있습니다.</p>
+  </li>
+  <li>
+    <p><strong>에러 처리</strong>: 메시지 전송 중 발생할 수 있는 에러를 처리할 수 있는 기능을 제공합니다. 이를 통해 개발자는 에러 상황을 쉽게 처리할 수 있습니다.</p>
+  </li>
+  <li>
+    <p><strong>통신 가능 시점 관리</strong>: 웹이 로딩된 후에만 메시지를 보낼 수 있도록 관리합니다. 이를 통해 웹이 로딩되지 않은 상태에서 메시지를 보내는 문제를 해결할 수 있습니다.</p>
+  </li>
+</ol>
+
+<p>위의 목표들은 흔히 웹에서 생각할 수 있는 HTTP 통신과 유사합니다. 그래서 이를 구현하기 위해서는 HTTP 통신을 구현하는 것과 유사한 방식으로 개발하면 될 것이라 생각했습니다.</p>
+
+<h2 id="section-7">통신 가능 시점 확인하기</h2>
+
+<h3 id="section-8">해결해야하는 문제 상황</h3>
+
+<p>개발하다보면 웹을 띄우자마자 특정 동작을 해야하는 경우가 존재합니다. 뿐만 아니라 어느 시점부터 웹과 앱 간의 통신이 가능한지 확인해야만 안정적으로 메시지를 주고 받을 수 있을 것입니다.</p>
+
+<p>처음에는 단순히 웹뷰가 로딩된 후(Webview 컴포넌트의 onLoad 사용)에만 메시지를 보내는 방법을 생각했습니다. 하지만 이는 웹뷰가 로드되었다는 것을 알려줄 뿐 정말로 앱에서 보낸 메시지를 받을 수 있는 Next.js의 js가 올바르게 로드되었는지를 나타낼 수는 없었습니다. 그렇기에 대부분의 경우 올바르게 동작하지 않았습니다.</p>
+
+<h3 id="tcp-3-way-handshake">아이디어 : TCP 3-Way-Handshake</h3>
+
+<p>어떻게 이 문제를 해결할 수 있을까 고민하다가 TCP 통신을 생각해보았습니다.</p>
+
+<ul>
+  <li>통신을 시작하는 주체가 먼저 SYN 세그먼트를 보냅니다.</li>
+  <li>상대방은 SYN 세그먼트를 받고, SYN/ACK 세그먼트를 보냅니다.</li>
+  <li>마지막으로 주체는 ACK 세그먼트를 보내며 연결을 완료합니다. 이때 ACK와 동시에 데이터를 보낼 수 있습니다.</li>
+</ul>
+
+<p>이러한 3-Way-Handshake 과정을 통해 각자 통신에 필요한 준비가 완료되었음을 알 수 있습니다.</p>
+
+<p>이를 웹뷰 통신 로직에 적용해볼 수 있지 않을까요?</p>
+
+<h3 id="section-9">개발 과정</h3>
+
+<p>처음에는 웹뷰에 javascript를 삽입(inject)하여, 웹뷰가 로딩되면 바로 메시지를 보내는 방식으로 구현하고자 하였습니다. 
+이를 통해서 굳이 웹에서는 앱과의 통신에 대해서 신경쓰지 않으며, 앱 내에서만 통신을 관리할 수 있을 것이라 생각했습니다.</p>
+
+<pre>
+  <code class="jsx">
+    export const WEB_VIEW_HANDSHAKE = `
+    (() =&gt; {
+      alert('웹뷰 핸드쉐이크 시작');
+      const webviewReady = (syn, ack) =&gt; window.ReactNativeWebView.postMessage(JSON.stringify({ name: 'webview-handshake', meta: {syn, ack} }));
+
+      webviewReady(1, 0);
+
+      // 만약 웹뷰 요청을 보낸 이후 1초 이내에 응답을 받지 못하면 한번 더 요청을 보낸다.
+      // 1초로 한 이유는 일반적인 리눅스 시스템에서 TCP 연결을 위한 SYN 타임아웃이 1초로 설정되어 있기 때문이다.
+      let timeoutId = setTimeout(() =&gt; {
+        webviewReady(1, 0);
+      }, 1000);
+
+      function handleMessage(event) {
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          
+          if (data.name === 'webview-handshake' &amp;&amp; data.meta.syn === 1 &amp;&amp; data.meta.ack === 1) {
+            webviewReady(0, 1);
+            
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+
+            window.removeEventListener('message', handleMessage);
+          }
+        } catch (error) {
+          console.error('메시지 처리 중 오류 발생:', error);
+        }
+      }
+      window.addEventListener('message', handleMessage);
+      return true;
+    })()
+    `;
+  </code>
+</pre>
+
+<p>하지만 이 방법은 웹뷰가 로딩되기 전에 메시지를 보내는 문제가 발생했습니다. 이를 해결하기 위해서 웹뷰가 완전히 로딩되어 js가 동작할 수 있는 시점을 직접 웹에서 알려주도록 하였습니다. 웹에서 앱으로 메시지를 보낸다는 것은, javascript가 완전히 로딩되었다는 것을 의미하며, 그 시점 이후부터는 앱으로부터 메시지를 받을 수 있다는 것을 의미합니다. (Next를 기준으로 생각해보면, hydration이 완료된 이후(window를 사용할 수 있는 시점부터)라고 생각할 수 있습니다.)</p>
+
+<p>HTTP로 생각해보면 앱은 항상 실행되고 있는 서버이고, 웹은 중간중간 간헐적으로 접속을 하고 끊기는 클라이언트라고 생각할 수 있습니다. 즉 어쩌면 웹이 먼저 메시지를 보내는 것은 자연스러운 것입니다.</p>
+
+<pre>
+  <code class="jsx">
+    // 3-way-handshake 로직이 추가된 Webview 컴포넌트
+    const WebViewWithInjected = forwardRef&lt;WebView, WebViewWithInjectedProps&gt;(
+      ({ source, onMessage, onReadyToMessage }, ref) =&gt; {
+        const [isWebViewReady, setIsWebViewReady] = useState(false);
+        const webViewRef = useRef&lt;WebView&gt;(null);
+
+        useImperativeHandle(ref, () =&gt; webViewRef.current as WebView);
+
+        useEffect(() =&gt; {
+          if (isWebViewReady) {
+            Alert.alert("onReadyToMessage 실행");
+            onReadyToMessage?.();
+          }
+        }, [isWebViewReady, onReadyToMessage]);
+
+        const handleMessage = useCallback(
+          (event: WebViewMessageEvent) =&gt; {
+            const reqMessage = JSON.parse(event.nativeEvent.data);
+            if (reqMessage.name === "webview-handshake") {
+              if (reqMessage.meta.syn === 1 &amp;&amp; reqMessage.meta.ack === 0) {
+                webViewRef.current?.postMessage(
+                  JSON.stringify({
+                    name: "webview-handshake",
+                    meta: { syn: 1, ack: 1 },
+                  }),
+                );
+                return;
+              }
+              if (reqMessage.meta.syn === 0 &amp;&amp; reqMessage.meta.ack === 1) {
+                setIsWebViewReady(true);
+                Alert.alert("웹뷰 핸드쉐이크 완료" + isWebViewReady);
+                onReadyToMessage?.();
+                return;
+              }
+            }
+            if (onMessage) onMessage(reqMessage);
+          },
+          [onMessage],
+        );
+
+        return (
+          &lt;WebView
+            sourse={/*...*/}
+            ref={webViewRef}
+            injectedJavaScript={INJECTED_JAVASCRIPT}
+            showsHorizontalScrollIndicator={false}
+            onMessage={handleMessage}
+          /&gt;
+        );
+      },
+    );
+
+    export default WebViewWithInjected;
+  </code>
+</pre>
+
+<p>앱에서는 웹으로부터 syn 메시지를 받으면 syn/ack 메시지를 보내고, ack 메시지를 받으면 웹뷰가 준비되었다는 것을 인지합니다. 이 과정이 전부 끝나면 웹뷰가 준비되었다는 것을 인지하게 됩니다.</p>
+
+<p>웹에서는 아래처럼 구현할 수 있었습니다.</p>
+
+<pre>
+  <code class="jsx">
+    "use client";
+
+    type Flag = 0 | 1;
+
+    interface WebviewHandshake {
+      name: "webview-handshake";
+      flag: {
+        syn: Flag;
+        ack: Flag;
+      };
+    }
+
+    const TIMEOUT = 1000;
+
+    function postMessage&lt;Data&gt;(
+      message: MessageEventResponseData&lt;Data&gt; | WebviewHandshake
+    ) {
+      window.ReactNativeWebView?.postMessage(JSON.stringify(message));
+      document.ReactNativeWebView?.postMessage(JSON.stringify(message));
+    }
+
+    export default function Bridge({ onRequest }: BridgeProps) {
+      // ...앱에서 보낸 일반 메시지 처리 코드...
+
+      useEffect(() =&gt; {
+
+        // 0. Bridge컴포넌트가 로드되고 js를 실행할 수 있는 시점에서, 앱으로 syn 메시지를 보낸다. 
+        const postHandShakeMessage = (syn: Flag, ack: Flag) =&gt; {
+          postMessage({ name: "webview-handshake", flag: { syn, ack } });
+        };
+        postHandShakeMessage(1, 0);
+
+        // 앱으로 syn을 보낸 후, 1초 이내에 ack을 받지 못하면 다시 syn을 보낸다.
+        // 1초로 설정한 이유는 일반적인 리눅스 시스템에서 TCP 연결을 위한 SYN 타임아웃이 1초로 설정되어 있기 때문이다.
+        const timeoutId = setTimeout(() =&gt; {
+          postHandShakeMessage(1, 0);
+        }, TIMEOUT);
+
+        const handleMessage = (event: MessageEvent) =&gt; {
+          event.stopPropagation();
+          try {
+            // 3. 앱으로부터 받은 메시지에서 name과 flag를 추출한다. 
+            const {
+              name,
+              flag: { syn, ack },
+            } =
+              typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+
+            // 4. 핸드셰이크 과정에서 syn/ack 메시지를 기대하고 있으며, syn이 1이고 ack이 1인 메시지를 받으면 앱에서 준비가 완료되었다는 것을 인지한다.
+            // 5. 이후 ack을 보내고, 타임아웃 및 핸드셰이크 이벤트 리스너를 제거한다.
+            if (name === "webview-handshake" &amp;&amp; syn === 1 &amp;&amp; ack === 1) {
+              postHandShakeMessage(0, 1);
+
+              if (timeoutId) clearTimeout(timeoutId);
+
+              window.removeEventListener("message", handleMessage);
+            }
+          } catch (error) {
+            console.error("handshake 중 에러 발생:", error);
+            window.removeEventListener("message", handleMessage);
+          }
+        };
+
+        // 1. 웹뷰가 로딩되면 앱으로부터 메시지를 받기 위해 이벤트 리스너를 등록한다.
+        // 2. 앱으로부터 메시지를 받으면 handleMessage 함수를 호출한다.
+        window.addEventListener("message", handleMessage);
+      }, []);
+
+      return null;
+    }
+  </code>
+</pre>
+
+<p>웹에서는 우선적으로 앱으로 syn 메시지를 보내고, 앱에서 syn/ack 메시지를 받으면 ack 메시지를 보내는 방식으로 구현하였습니다. 이렇게 하면 웹뷰가 로딩된 이후에만 메시지를 보낼 수 있게 됩니다.</p>
+
+<p>이를 시퀀스 다이어그램으로 나타내면 아래와 같습니다.</p>
+
+<p><img src="https://github.com/geongyu09/geongyu09.github.io/blob/dev/public/assets/blog/webviewThreeWayHandshake/handshake-process.png?raw=true" alt="handshake 다이어그램" /></p>
+
+<p>실제로 아래처럼 잘 동작합니다!</p>
+
+<p><img src="https://github.com/geongyu09/geongyu09.github.io/blob/dev/public/assets/blog/webviewThreeWayHandshake/handshake.gif?raw=true" alt="handshake 시연" /></p>
+
+<p>관련된 pr은 <a href="https://github.com/JNU-econovation/Soop-WEB/pull/11">여기</a>에서 확인하실 수 있습니다.</p>
+
+<h2 id="section-10">나머지 문제들 해결</h2>
+
+<p>이제 웹뷰가 로딩된 이후에만 메시지를 보낼 수 있게 되었으니, 나머지 문제들을 해결해보겠습니다. 안전한 통신을 위하여 통신 가능 시점을 TCP 3-Way-Handshake로 확인하는 과정을 거쳤습니다. 이제는 이 메시지를 주고 받을 수 있도록, 실제 HTTP 통신에서 메시지를 하위 레이어의 헤더로 감싸 보내듯이 인자로 전달받은 메시지를 헤더로 감싸서 보내도록 하였습니다.</p>
+
+<p><img src="https://github.com/geongyu09/geongyu09.github.io/blob/dev/public/assets/blog/webviewThreeWayHandshake/improve-handshake.png?raw=true" alt="개선된 전체 통신 다이어그램" /></p>
+
+<h3 id="section-11">받을 때에는 컴포넌트로, 보낼 때에는 훅으로</h3>
+
+<p>웹뷰와 앱 간의 메시지를 주고받을 때, 받는 쪽은 컴포넌트로, 보내는 쪽은 훅으로 구현하였습니다. 이는 리액트의 컴포넌트와 훅의 사용 방식을 따르도록 하여 개발자가 쉽게 사용할 수 있도록 하였습니다.</p>
+
+<h3 id="section-12">타입 안정성을 챙기자</h3>
+
+<p>흔히 개발자가 api 명세서를 작성할 때 요청과 응답값을 팀의 취향에 맞게 정의합니다. 메시지 타입 또한 사용하는 곳에서 직접 정의할 수 있도록 하는 것이 맞다고 생각하였습니다. 정의한 타입을 지킬 수 있도록 하여 타입 세이프한 통신이 가능하게 하고자 하였습니다.</p>
+
+<p>웹의 경우 아래처럼 사용하도록 하였습니다.</p>
+
+<pre>
+  <code class="jsx">
+    // 웹에서 메시지를 보낼 때
+
+    // 요청/응답 메시지 타입을 넣어 정의한다.
+    const { request } = useBridge&lt;RequestMessage, ResponseMessage&gt;();
+
+    const sendMessage = () =&gt; {
+      request({
+        requestMessage: {
+          // 전송할 요청 메시지
+          // 이전에 정의한 메시지 타입을 따를 수 있도록 유도한다.
+        },
+        responseCallback: (response) =&gt; {
+          // 응답 메시지가 왔을 때 처리하는 콜백
+          // response는 이전에 정의한 응답 메시지 타입을 따른다.
+        },
+        onErrorCallback: (error) =&gt; {
+          // 에러가 발생했을 때 처리하는 콜백
+        },
+      });
+    };
+  </code>
+</pre>
+
+<ul>
+  <li>useBridge 훅을 통해서 요청을 보낼 수 있는 함수를 얻어오실 수 있습니다.</li>
+  <li>useBridge 훅에 요청과 응답 메시지 타입을 제네릭으로 넘겨주어, 요청과 응답 메시지의 타입을 미리 정의하실 수 있습니다.</li>
+  <li>request 함수의 경우 보낼 요청 메시지와, 요청에 대한 응답을 받았을 때 호출할 콜백, 에러가 발생했을 때 호출할 콜백을 인자로 받습니다. 각각은 이전에 정의한 메시지 타입을 따릅니다.</li>
+</ul>
+
+<pre>
+  <code class="jsx">
+    // 웹에서 메시지를 받을 때
+    &lt;BridgeRequestListener&lt;RequestMessage, ResponseMessage&gt;
+      onRequest={(requestMessage) =&gt; {
+        // requestMessage는 이전에 정의한 요청 메시지 타입을 따른다.
+        if (/*requestMessage 관련 분기 처리*/)
+          return {
+            // 응답 메시지
+          } 
+        return {
+          // 예상하지 못한 요청이 왔을 때의 응답 메시지
+        };
+      }}
+    /&gt;
+  </code>
+</pre>
+
+<ul>
+  <li>BridgeRequestListener 컴포넌트에 요청과 응답 메시지 타입을 제네릭으로 넘겨주어, 요청과 응답 메시지의 타입을 미리 정의하실 수 있습니다.</li>
+  <li>onRequest 콜백을 통해서 요청 메시지를 받으실 수 있습니다. 요청 메시지는 이전에 정의한 요청 메시지 타입을 따릅니다. 해당 콜백의 반환값은 응답 메시지가 되며, 필수적으로 응답 메시지를 반환해야 합니다.</li>
+</ul>
+
+<p>앱의 경우 아래와 같이 사용하도록 하였습니다.</p>
+
+<pre>
+  <code class="tsx">
+    // 앱에서 메시지를 보낼 때
+
+    const { ref, postMessage } = usePostMessageBridge&lt;RequestMessage, ResponseMessage&gt;();
+
+    postMessage({
+      message: {
+        // 전송할 요청 메시지
+        // 이전에 정의한 요청 메시지 타입을 따른다.
+      },
+    });
+
+    return (
+      &lt;WebviewWithBridge
+        ref={ref}
+        //...
+      /&gt;
+    );
+  </code>
+</pre>
+
+<ul>
+  <li>usePostMessageBridge 훅을 통해서 메시지를 보낼 수 있는 postMessage 함수와 ref를 얻어올 수 있습니다.</li>
+  <li>usePostMessageBridge 훅에 요청과 응답 메시지 타입을 제네릭으로 넘겨주어, 요청과 응답 메시지의 타입을 미리 정의할 수 있습니다.</li>
+  <li>postMessage 함수의 경우 보낼 요청 메시지를 인자로 받습니다. 요청 메시지는 이전에 정의한 요청 메시지 타입을 따릅니다.</li>
+  <li>ref는 Webview 컴포넌트에 전달해주셔야 합니다. 이를 통해서 Webview 컴포넌트에서 메시지를 보낼 수 있습니다.</li>
+</ul>
+
+<pre>
+  <code class="jsx">
+    // 앱에서 메시지를 받을 때 
+    &lt;WebviewWithBridge&lt;MessageEventRequestData, MessageEventResponseData&gt;
+      ref={webViewRef}
+      onBridgeMessage={(reqMessage) =&gt; {
+        // 요청 메시지를 받았을 때 처리하는 콜백
+        // reqMessage는 이전에 정의한 요청 메시지 타입을 따른다.
+        if (/*reqMessage 관련 분기 처리*/)
+          return {
+            // 응답 메시지
+          } 
+        return {
+          // 예상하지 못한 요청이 왔을 때의 응답 메시지
+        };
+      }}
+      middleware={(reqMessage: MessageEventRequestData) =&gt; {
+        // 요청 메시지에 대한 미들웨어 처리. 이는 어떤 요청 메시지가 오더라도 onBridgeMessage 콜백이 호출되기 전에 실행된다.
+        // 예를 들어, 요청 메시지의 유효성을 검사하거나, 로깅 등을 할 수 있다.
+      }}
+      //...
+    /&gt;
+  </code>
+</pre>
+
+<ul>
+  <li>WebviewWithBridge 컴포넌트에 요청과 응답 메시지 타입을 제네릭으로 넘겨주어, 요청과 응답 메시지의 타입을 미리 정의할 수 있습니다.</li>
+  <li>onBridgeMessage 콜백을 통해서 요청 메시지를 받으실 수 있습니다. 요청 메시지는 이전에 정의한 요청 메시지 타입을 따릅니다. 해당 콜백의 반환값은 응답 메시지가 되며, 필수적으로 응답 메시지를 반환해야 합니다.</li>
+</ul>
+
+<p>여기서 웹은 요청에 대한 응답을 콜백으로 받는 반면, 앱은 요청에 대한 응답을 반환값으로 받는다는 차이가 있습니다. 이는 Webview 컴포넌트의 ref로는 응답을 처리할 수 없는 구조이기 때문에 불가피하게 모든 응답 혹은 요청은 WebviewWithBridge 컴포넌트로 받아야만 합니다.</p>
+
+<h3 id="section-13">요청과 응답</h3>
+
+<p>이와 더불어서 보낸 요청에 대한 응답을 받을 수 있도록 해야 했습니다. 단방향인 이벤트 기반의 통신에서, 받는 값이 요청인지 응답인지를 구분할 수 있어야만 했고, 응답이라면 어떤 요청에 대한 응답인지를 구분해야만 했습니다. 이를 구분하기 위하여 조금 더 명확하게 메시지 타입을 정의하도록 하였습니다.</p>
+
+<ul>
+  <li>관련 pr : https://github.com/JNU-econovation/Soop-APP/pull/33</li>
+</ul>
+
+<p>메시지 타입은 아래와 같습니다.</p>
+
+<pre>
+  <code class="tsx">
+    {
+      _id : string // 메시지별로 고유한 식별자
+      ack : string | null // 해당 메시지가 요청인 경우 null, 응답인 경우 요청 메시지의 \_id값
+      flag : { syn } // 해당 메시지가 연결 요청 메시지인지 표시하는 값. 이는 핸드셰이크 과정에서 사용
+      body : any // 메시지 본문값. 이는 상단에서 내려준 메시지가 담김
+    }
+  </code>
+</pre>
+
+<p>모든 메시지는 고유한 식별자 id를 가집니다. 요청이라면 ack값이 null이고, 응답이라면 ack값이 요청 메시지의 _id값이 되도록 하였습니다. 이를 통해서 요청과 응답을 구분할 수 있고, 어떤 요청에 대한 응답인지를 특정지을 수 있었습니다.</p>
+
+<h3 id="section-14">메시지 큐</h3>
+
+<p>이제 메시지의 형식이 정해졌고, 요청과 응답을 주고 받을 수 있게 되었습니다. 
+이제는 메시지를 보내는 쪽에서 요청에 대한 응답을 받아 처리할 수 있도록 해야 했습니다. 
+응답은 요청을 보낸 즉시 오지 않는 비동기 방식으로 동작하기 때문에, 요청을 보낼 때마다 응답을 처리할 콜백을 미리 저장해두고, 응답이 왔을 때 해당 콜백을 찾아 호출해야만 했습니다.
+이를 위해서 메시지 큐를 구현하였습니다.
+요청을 보낼 때마다 메시지 큐에 요청 메시지의 _id와 응답 콜백을 저장해두고, 응답 메시지를 받았을 때 메시지 큐에서 해당 _id에 대한 콜백을 찾아 호출하는 방식으로 구현하였습니다.</p>
+
+<p>큐의 이름은 TCP 통신에서 흐름 제어를 위해 사용하는 수신 윈도우(RWND, Receive Window)에서 따왔습니다.</p>
+
+<pre>
+  <code class="tsx">
+    class RWindow {
+      // TODO: 단순 id를 담는 것이 아닌 객체로 변경 고려 (메시지 body를 제외한 모든 정보 담기)
+      public RWND_BUFFER: Set&lt;string&gt;;
+
+      //TODO: WeakMap으로 변경 고려 =&gt; RWND_BUFFER에서 객체를 제거하면 GC가 콜백도 제거해줄 것임
+      private callbackBuffer: Map&lt;string, ((resMessage?: any) =&gt; void)[]&gt; =
+        new Map();
+      private static WINDOW_SIZE = 20;
+
+      constructor() {
+        this.RWND_BUFFER = new Set&lt;string&gt;();
+      }
+
+      // id 추가
+      public add(id: string) {
+        if (this.RWND_BUFFER.size &gt;= RWindow.WINDOW_SIZE) {
+          throw new Error("RWND_BUFFER is already full");
+        }
+
+        if (this.RWND_BUFFER.has(id)) {
+          throw new Error("RWND_BUFFER already contains this id");
+        }
+
+        this.RWND_BUFFER.add(id);
+      }
+
+      // id에 해당하는 콜백들 제거 및 반환
+      public popCallbacksById(id: string) {
+        this.RWND_BUFFER.delete(id);
+
+        const callbacks = this.callbackBuffer.get(id);
+        this.callbackBuffer.delete(id);
+
+        return callbacks ?? [];
+      }
+      
+      // id에 콜백 추가
+      public addListener&lt;ResMessageType&gt;(
+        id: string,
+        callback: (resMessage: ResMessageType) =&gt; void,
+      ) {
+        if (this.callbackBuffer.has(id)) {
+          this.callbackBuffer.set(id, [...this.callbackBuffer.get(id)!, callback]);
+          return;
+        }
+        this.callbackBuffer.set(id, [callback]);
+      }
+
+      // id에 해당하는 콜백들 반환
+      public getListeners(
+        id: string,
+      ): \(\(resMessage?: unknown) =&gt; void)\[] | undefined {
+        return this.callbackBuffer.get(id);
+      }
+    }
+  </code>
+</pre>
+
+<p>RWindow 인스턴스를 전역으로 생성하여 id와 콜백을 관리하도록 하였습니다. 요청을 보낼 때마다 RWindow 인스턴스에 id값과 콜백을 저장하도록 하였습니다.</p>
+
+<p>이후 메시지를 보낼 수 있는 동작을 정의해보았습니다.</p>
+
+<pre>
+  <code class="tsx">
+    class Message&lt;BodyType = unknown&gt; {
+      private _id: string;
+      private ack: string | null;
+      private flag: { syn: 0 | 1 };
+      private body?: BodyType;
+
+      constructor(
+        private ref: React.RefObject&lt;WebView&lt;{}&gt; | null&gt;,
+        private R_WND: RWindow,
+        {
+          ack = null,
+          syn = 0,
+          body,
+        }: {
+          syn: 0 | 1;
+          ack: string | null;
+          body?: BodyType;
+        },
+      ) {
+        this._id = this.getRandomId();
+        this.ack = ack;
+        this.flag = { syn };
+        this.body = body;
+      }
+
+      private createNewMessageObj = () =&gt; {
+        return {
+          _id: this._id,
+          ack: this.ack,
+          flag: this.flag,
+          body: this.body,
+        };
+      };
+
+      // 메시지 전송 및 콜백 등록
+      public send = &lt;ResMessageType&gt;(callback?: (m: ResMessageType) =&gt; void) =&gt; {
+        Message.sendWebviewMessage(this.ref, this.createNewMessageObj());
+
+        if (!callback) return;
+        this.R_WND.addListener(this._id, callback);
+      };
+
+      // 웹의 경우 아래의 방식으로 작성하였다. 
+      // 요청을 보내면 응답 콜백을 등록하고, window에 이벤트 리스너를 등록하여 응답 메시지를 받는다.
+      // 응답 메시지를 받으면(ack가 _id와 일치), 해당 콜백을 찾아 호출하고, 이벤트 리스너를 제거한다.
+      public send = &lt;Body&gt;(callback?: (m: WebviewBridgeMessage&lt;Body&gt;) =&gt; void) =&gt; {
+        Message.sendWebviewMessage(this.createNewMessageObj());
+
+        if (!callback) return;
+        this.R_WND.addListener(this._id, callback);
+
+        const messageHandler = (event: Event) =&gt; {
+          const messageEvent = event as MessageEvent&lt;WebviewBridgeMessage&lt;Body&gt;&gt;;
+          messageEvent.stopPropagation();
+          const resMessage =
+            typeof messageEvent.data === "string"
+              ? (JSON.parse(messageEvent.data) as WebviewBridgeMessage&lt;Body&gt;)
+              : messageEvent.data;
+
+          if (resMessage.ack === this._id) {
+            const listeners = this.R_WND.popCallbacksById(this._id);
+            listeners.forEach((listener) =&gt; listener(resMessage));
+            document.removeEventListener("message", messageHandler);
+            window.removeEventListener("message", messageHandler);
+          }
+        };
+
+        document.addEventListener("message", messageHandler as EventListener);
+        window.addEventListener("message", messageHandler);
+      };
+    }
+  </code>
+</pre>
+
+<p>이를 한번에 관리할 수 있는 클래스도 만들어 보았습니다.</p>
+
+<pre>
+  <code class="tsx">
+    class WebViewBridge {
+      private R_WND: RWindow = new RWindow();
+
+      public createMessage = &lt;BodyType&gt;(
+        // WebView ref와 메시지 body를 인자로 받아 메시지 인스턴스를 생성. 
+        // 앱에서만 유효하며, 웹에서는 ref를 받지 않는다.
+        ref: React.RefObject&lt;WebView | null&gt;,
+        {
+          ack = null,
+          syn = 0,
+          body,
+        }: Omit&lt;WebviewBridgeMessage&lt;BodyType&gt;, \"flag\" | \"\_id\"&gt; &amp; {
+          syn?: Flag;
+        },
+      ) =&gt; {
+        return new Message&lt;BodyType&gt;(ref, this.R_WND, {
+          ack,
+          syn,
+          body,
+        });
+      };
+
+      // id에 해당하는 콜백을 찾아 호출
+      public renderCallback = (ack: string, body: unknown) =&gt; {
+        const callbacks = this.RWND.popCallbacksById(ack);
+
+        callbacks.forEach((callback) =&gt; callback(body));
+      };
+    }
+
+    // 사용법
+    const Bridge = new WebViewBridge();
+    Bridge.createMessage(webViewRef, {
+      syn: ...,
+      ack: ...,
+      body: { ... },
+    }).send(() =&gt; {/* callback */});
+  </code>
+</pre>
+
+<p>위의 3개의 클래스를 통해서 메시지를 주고 받을 수 있는 기본적인 구조를 완성하였습니다.</p>
+
+<p>이제 이를 react 훅과 컴포넌트로 감싸서 개발 단계에서 쉽게 사용할 수 있도록 하였습니다.</p>
+
+<h3 id="section-15">리액트 훅과 컴포넌트로 감싸기</h3>
+
+<p>앱에서 보낼 때에는 usePostMessageBridge 훅을 사용하도록 하였습니다.</p>
+
+<pre>
+  <code class="tsx">
+    interface PostMessageProps&lt;MessageType, ResponseType&gt; {
+      message: MessageType;
+      onResponse?: (response: ResponseType) =&gt; void;
+    }
+
+    const usePostMessageBridge = &lt;ReqType, ResponseType&gt;() =&gt; {
+      const ref = useRef&lt;WebView | null&gt;\(null);
+
+      const postMessage = ({
+        message,
+        onResponse,
+      }: PostMessageProps&lt;ReqType, ResponseType&gt;) =&gt; {
+        if (!ref.current) {
+          // WebView가 아직 로드되지 않은 경우
+          // ...
+          return;
+        }
+
+        try {
+          // 요청 메시지 생성 및 전송
+          const newMessage = Bridge.createMessage&lt;ReqType&gt;(ref, {
+            ack: null,
+            body: message,
+          });
+          newMessage.send&lt;ResponseType&gt;((response) =&gt; {
+            if (onResponse) return onResponse(response);
+          });
+        } catch (error) {
+          // ...
+        }
+      };
+
+      return {
+        ref,
+        postMessage,
+      };
+    };
+  </code>
+</pre>
+
+<p>웹에서는 아래와 같이 작성하였습니다.</p>
+
+<pre>
+  <code class="tsx">
+    "use client";
+    interface RequestProps&lt;ReqBody = unknown, ResBody = unknown&gt; {
+      requestMessage: ReqBody;
+      responseCallback?: (resMessage: ResBody) =&gt; void;
+    }
+
+    const useBridge = &lt;ReqBody = unknown, ResBody = unknown&gt;() =&gt; {
+      const Bridge = getBridge();
+      const [isReady, setIsReady] = useState(false); // 웹뷰가 준비되었는지 여부
+
+      // 웹뷰가 준비되었는지 확인하는 핸드셰이크 메시지 전송.
+      const sendHandshakeSynMessage = useCallback(() =&gt; {
+        if (isReady) return;
+        Bridge.createMessage({
+          syn: BRIDGE.SET,
+          ack: null,
+        }).send((message) =&gt; { // 앱으로부터 syn/ack 메시지를 받으면 ack 메시지를 보내고, 웹뷰가 준비되었음을 인지
+          const {
+            _id,
+            ack,
+            flag: { syn },
+          } = message;
+          if (syn !== BRIDGE.SET) // error...
+          if (ack === null) // error...
+          setIsReady(true); // 앱으로부터 syn/ack 메시지를 받았으므로, 앱이 웹뷰 통신 준비가 되었음을 인지
+
+          // ack 메시지 전송 (핸드셰이크 완료)
+          Bridge.createMessage({
+            ack: _id,
+            syn: BRIDGE.RESET,
+          }).send();
+        });
+      }, [Bridge, isReady]);
+
+      // 컴포넌트가 마운트될 때 핸드셰이크 시작
+      useEffect(() =&gt; {
+        sendHandshakeSynMessage();
+      }, [sendHandshakeSynMessage]);
+
+      // 요청을 보낼 수 있는 request 함수
+      const request = ({
+        requestMessage,
+        responseCallback,
+      }: RequestProps&lt;ReqBody, ResBody&gt;) =&gt; {
+        // 서버에서 실행되지 않도록 방지
+        if (typeof window === "undefined") return;
+
+        // 입력받은 요청 메시지를 전송하고 응답 콜백 등록
+        Bridge.createMessage({
+          ack: BRIDGE.BLANK,
+          body: requestMessage,
+        }).send&lt;ResBody&gt;(({ body }) =&gt; {
+          if (responseCallback &amp;&amp; body) return responseCallback(body);
+        });
+      };
+
+      return { request };
+    };
+  </code>
+</pre>
+
+<p>응답을 받는 앱 컴포넌트는 아래와 같이 작성하였습니다.</p>
+
+<pre>
+  <code class="tsx">
+    interface WebViewWithBridgeProps&lt;ReqMessage, ResMessage&gt;
+      extends Omit&lt;ComponentProps&lt;typeof WebView&gt;, "onMessage"&gt; {
+      onBridgeMessage?:
+        | \(\(reqMessage: ReqMessage) =&gt; ResMessage | void)
+        | \(\(reqMessage: ReqMessage) =&gt; Promise&lt;ResMessage | void&gt;);
+      onReadyToMessage?: () =&gt; void;
+      middleware?: (message: ReqMessage) =&gt; void;
+      ref?: Ref&lt;WebView&gt;;
+    }
+
+    const WebviewWithBridge = &lt;ReqMessage, ResMessage&gt;({
+      onBridgeMessage,
+      onReadyToMessage,
+      middleware,
+      ref,
+      ...props
+    }: WebViewWithBridgeProps&lt;ReqMessage, ResMessage&gt;) =&gt; {
+      const [isReady, setIsReady] = useState(false); // 웹뷰가 준비되었는지 여부
+      const internalRef = useRef&lt;WebView&gt;(null);
+      const webViewRef = ref ? (ref as React.RefObject&lt;WebView&gt;) : internalRef;
+
+      const handleMessage = useCallback(
+        (event: WebViewMessageEvent) =&gt; {
+          const reqMessage = JSON.parse(
+            event.nativeEvent.data,
+          ) as WebviewBridgeMessage&lt;ReqMessage&gt;;
+
+          const {
+            _id,
+            ack,
+            flag: { syn },
+            body,
+          } = reqMessage;
+
+          // 만약 수신한 메시지가 ack 메시지라면(특정 요청 메시지에 대한 응답 메시지라면), 해당 콜백을 찾아 호출
+          if (ack) Bridge.renderCallback(ack, reqMessage);
+
+          // handshake 로직
+          // 웹으로부터 handshake sync 메시지 수신
+          if (!isReady) {
+            if (!isReady &amp;&amp; syn === 1 &amp;&amp; ack === null) {
+              // 웹에서 syn을 보냈을 때, syn/ack을 보내준다.
+              Bridge.createMessage(webViewRef, {
+                syn: 1,
+                ack: _id,
+              }).send&lt;WebviewHandshake&gt;(({ ack, flag: { syn } }) =&gt; {
+                if (!isReady &amp;&amp; syn === 0 &amp;&amp; ack !== null) {
+                  setIsReady(true);
+                  return;
+                }
+              });
+              return;
+            }
+          }
+
+          // 웹뷰가 준비되지 않은 상태라면 일반적인 메시지 처리를 하지 않음
+          if (!isReady) return;
+
+          // 일반적인 메시지 처리
+          if (onBridgeMessage) {
+            const resMessage = onBridgeMessage(body);
+
+            // onBridgeMessage가 Promise를 반환하는 경우
+            if (resMessage instanceof Promise) {
+              resMessage
+                .then((response) =&gt; {
+                  if (!response) {
+                    // 응답이 없는 경우 경고 또는 에러 처리
+                  }
+                  // 응답 메시지 전송
+                  Bridge.createMessage(webViewRef, {
+                    ack: _id,
+                    body: response,
+                  }).send();
+                })
+                .catch((error) =&gt; {
+                  // ...
+                });
+              return;
+            } else {
+              // onBridgeMessage가 일반 값을 반환하는 경우
+              if (!resMessage) {
+                // 응답이 없는 경우 경고 또는 에러 처리
+              }
+              // 응답 메시지 전송
+              Bridge.createMessage(webViewRef, {
+                ack: _id,
+                body: resMessage,
+              }).send();
+            }
+          }
+        },
+        [onBridgeMessage, middleware, isReady],
+      );
+
+      return &lt;WebView ref={webViewRef} onMessage={handleMessage} {...props} /&gt;;
+    };
+  </code>
+</pre>
+
+<p>웹에서는 아래와 같이 작성하실 수 있습니다.</p>
+
+<pre>
+  <code class="tsx">
+    "use client";
+
+    interface BridgeProps&lt;RequestMessage, ResponseMessage&gt; {
+      onRequest: (reqMessage: RequestMessage) =&gt; ResponseMessage;
+      requestValidator?: (reqMessage?: RequestMessage) =&gt; boolean;
+    }
+
+    export default function BridgeRequestListener&lt;RequestType, ResponseType&gt;({
+      onRequest,
+      requestValidator,
+    }: BridgeProps&lt;RequestType, ResponseType&gt;) {
+      const Bridge = getBridge();
+      const [isReady, setIsReady] = useState(false); // 웹뷰가 준비되었는지 여부
+
+      // 핸드셰이크 메시지 전송 로직
+      const sendHandshakeSynMessage = useCallback(() =&gt; {
+        if (isReady) return;
+
+        // 앱으로 syn 메시지 전송. 올바른 응답을 받으면 ack 메시지를 보내고, 웹뷰가 준비되었음을 인지
+        Bridge.createMessage({
+          syn: BRIDGE.SET,
+          ack: null,
+        }).send((message) =&gt; {
+          const {
+            _id,
+            ack,
+            flag: { syn },
+          } = message;
+          
+          // 올바른 응답이라면 
+          setIsReady(true); // 앱이 웹뷰 통신 준비가 되었음을 인지
+
+          // ack 메시지 전송 (핸드셰이크 완료)
+          Bridge.createMessage({
+            ack: _id,
+            syn: BRIDGE.RESET,
+          }).send();
+        });
+      }, [Bridge, isReady]);
+
+      // 웹뷰의 응답을 처리하는 로직. 앱으로부터 요청을 받았을 때 실행된다.
+      useEffect(() =&gt; {
+        if (!isReady) return;
+
+        const handleMessage = (event: Event) =&gt; {
+          const messageEvent = event as MessageEvent;
+
+          const { data } = messageEvent;
+          try {
+            const {
+              ack,
+              _id,
+              flag: { syn },
+              body,
+            } = typeof data === "string"
+              ? (JSON.parse(data) as WebviewBridgeMessage&lt;RequestType&gt;)
+              : (data as WebviewBridgeMessage&lt;RequestType&gt;);
+
+            if (ack !== null)
+              throw new Error(
+                "클라이언트에서 보낸 요청에 ack가 포함되어 있습니다.",
+              );
+
+            if (syn === 1)
+              throw new Error(
+                "핸드셰이크가 끝난 시점에서 웹뷰 핸드셰이크 메시지가 도착하였습니다.",
+              );
+
+            if (requestValidator &amp;&amp; !requestValidator(body)) {
+              throw new Error(
+                "요청 메시지의 유효성 검사에 실패하였습니다. 요청 메시지를 확인해주세요.",
+              );
+            }
+
+            if (body) {
+              const responseMessage = onRequest(body);
+
+              if (strictMode &amp;&amp; !responseMessage)
+                throw new Error("응답 메시지가 정의되지 않았습니다.");
+
+              Bridge.createMessage({
+                ack: _id,
+                syn: BRIDGE.RESET,
+                body: responseMessage,
+              }).send();
+            }
+          } catch (error) {
+            console.error("메시지 처리 중 오류 발생:", error);
+          }
+        };
+
+        // 요청에 대한 응답을 처리하는 로직
+        if (Message.checkIsAndroid()) {
+          document.addEventListener("message", handleMessage as EventListener);
+          return () =&gt;
+            document.removeEventListener("message", handleMessage as EventListener);
+        } else {
+          window.addEventListener("message", handleMessage);
+          return () =&gt; window.removeEventListener("message", handleMessage);
+        }
+      }, [Bridge, isReady, onRequest, requestValidator, strictMode]);
+
+      // 웹뷰 핸드셰이크를 위한 로직
+      useEffect(() =&gt; {
+        sendHandshakeSynMessage();
+      }, [sendHandshakeSynMessage]);
+
+      return null;
+    }
+  </code>
+</pre>
+
+<h3 id="section-16">실제 사용 모습</h3>
+
+<p>웹뷰를 사용하였을 때, 웹의 기본 화면 전환(네비게이션)을 그대로 사용하게 되면 툭툭 끊기고 부드럽지 못한 화면 전환이 발생합니다. 이로 인해 현재 애플리케이션에서 모든 네비게이션(화면 전환)의 책임을 앱에서 담당하도록 하였습니다. 그리고, 웹에서 특정 인터랙션 발생 시 특정 페이지로 화면을 전환하도록 메시지를 보내도록 하였습니다.</p>
+
+<p><img src="https://github.com/geongyu09/geongyu09.github.io/blob/dev/public/assets/blog/webviewThreeWayHandshake/%EC%9B%B9%EB%B7%B0%EC%8B%9C%EC%97%B0.gif?raw=true" alt="웹뷰시연" /></p>
+
+<p>사진과 같이 통신을 통한 웹뷰에서의 화면 전환이 잘 되는 것을 볼 수 있습니다!!!</p>
+
+<p>설명을 위해서 많은 코드가 생략되었습니다. 전체 코드는 <a href="https://github.com/JNU-econovation/Sangyeol-FE/tree/develop/packages/bridge">여기</a>에서 확인하실 수 있습니다.</p>
+
+<h3 id="section-17">마무리</h3>
+
+<p>이렇게 해서 웹뷰와 앱 간의 양방향 통신을 안전하게 할 수 있는 구조를 완성하였습니다. 뭔가 개발하면서 제 스스로 문제점을 인식하고, 이를 해결할 수 있는 라이브러리(?)를 만들어 간 점에서 진짜 개발자가 된 느낌이 들었습니다. 물론 아직도 부족한 점이 많고, 개선할 점이 많은 코드이지만, 기본적인 구조를 완성했다는 점에서 뿌듯합니다.</p>
+
+<p>점차 부족한 코드들도 개선해 나가면서, 이 라이브러리를 발전시켜 나가고 싶습니다. 기회가 된다면 오픈 소스로 공개하여, 다른 개발자분들도 이 라이브러리를 사용할 수 있도록 하고 싶습니다..!!</p>]]></content><author><name>geongyu</name></author><category term="TECH" /><category term="TECH" /><summary type="html"><![CDATA[웹뷰 브리지 라이브러리 개발 기록]]></summary></entry><entry><title type="html">제6회 Hello, ECONO! 리뷰</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/hello_econo/2025/09/10/%EC%A0%9C-6%ED%9A%8C-Hello-ECONO-%EB%A6%AC%EB%B7%B0.html" rel="alternate" type="text/html" title="제6회 Hello, ECONO! 리뷰" /><published>2025-09-10T00:00:00+09:00</published><updated>2025-09-10T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/hello_econo/2025/09/10/%EC%A0%9C%206%ED%9A%8C%20Hello%20ECONO%20%EB%A6%AC%EB%B7%B0</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/hello_econo/2025/09/10/%EC%A0%9C-6%ED%9A%8C-Hello-ECONO-%EB%A6%AC%EB%B7%B0.html"><![CDATA[<h1 id="hello-econo-">제6회 Hello, ECONO! 리뷰</h1>
+<p><img src="https://velog.velcdn.com/images/reuscap/post/da682aea-fde9-4b2b-bce7-9d9b68fc1378/image.png" alt="제6회 Hello, ECONO! 썸네일" /></p>
+
+<p>안녕하세요. 에코노베이션 홍보부 박태은입니다.</p>
+
+<p><code class="language-plaintext highlighter-rouge">Hello, ECONO!</code>👋는 에코노 피플이 자신의 경험을 교류하고 소통하면서, 에코노베이션으로 맺어진 인연을 이어 나가고자 하는 행사입니다.</p>
+
+<p>2023년 2월 19일을 시작으로 이제는 고정 행사가 되어 6회차를 맞이한 Hello, ECONO!가 지난 2025년 8월 30일에 진행되었는데요. 더욱 깊이 있는 교류의 장이 되기 위해 제 6회 Hello, ECONO!는 서울에서 오프라인으로 진행하였습니다.
+이번 포스팅에서는 <strong>이번 6회차 <code class="language-plaintext highlighter-rouge">Hello, ECONO!</code>를 리뷰</strong>해보도록 하겠습니다.</p>
+
+<h3 id="section">타임테이블</h3>
+<p><img src="https://velog.velcdn.com/images/reuscap/post/66fd15f6-0da1-4c97-b5b6-d5859f6f52d5/image.png" alt="제6회 Hello, ECONO! 타임테이블" /></p>
+
+<h2 id="section-1">1부</h2>
+
+<p><code class="language-plaintext highlighter-rouge">Hello, ECONO!</code>행사 1부에서는 다음의 세 연사님🎤을 모셨습니다.
+<img src="https://velog.velcdn.com/images/reuscap/post/49f470e7-243f-429b-bb84-5a3fb181248d/image.png" alt="제6회 Hello, ECONO! 스피커 소개" /></p>
+
+<ul>
+  <li>14기 심기성 님: 직장 다니면서 대학원 다니기</li>
+  <li>22기 김수민 님: 생각보다 쉬운 오픈소스 기여와 예상보다 큰 배움</li>
+  <li>21기 권순찬 님: 금융권 개발자는 어떤 개발자고, 어떻게 개발하고, 누가 되는걸까?</li>
+</ul>
+
+<hr />
+
+<h3 id="speaker-14-------">🎙️ [Speaker] 14기 심기성님 - 직장 다니면서 대학원 다니기</h3>
+
+<p>첫 번째 연사는 14기 심기성님께서 ‘직장 다니면서 대학원 다니기’라는 주제로 문을 열어주셨습니다. ‘학사경고 맞고 카카오 들어가기’, ‘백엔드에서 풀스택 개발자로 거듭나기’ 등 여러 흥미로운 주제를 고민하셨지만, 후배들에게 가장 현실적인 도움이 될 수 있는 대학원 병행 경험을 공유해주셨습니다.</p>
+
+<h4 id="section-2">🏫 직장인을 위한 대학원의 종류</h4>
+<p>직장인이 선택할 수 있는 대학원은 크게 두 가지 경로가 있다고 합니다. 첫째는 경영 능력을 향상시키기 위한 MBA(경영전문대학원), 둘째는 심기성님처럼 기술적 역량을 증진시키기 위한 IT 특수대학원입니다. 이공계 직장인들이 커리어 심화를 위해 주로 선택하는 경로라고 할 수 있습니다.</p>
+
+<h4 id="a-to-z">🔎 입학 과정 A to Z</h4>
+<p>많은 직장인들이 합격을 위해 고액의 컨설팅까지 받으며 대학원 입학을 준비한다고 하는데요. 현재 고려대학교 SW.AI융합대학원에 재학 중인 기성님께서 생생한 입학 과정을 공유해주셨습니다.</p>
+
+<p>입학은 1차 서류, 2차 면접으로 진행되며, 5명의 지원자가 10분간 면접을 보는 형식이라고 합니다. 실제 면접 질문은 다음과 같았습니다.</p>
+
+<ol>
+  <li>
+    <p>간단한 자기소개</p>
+  </li>
+  <li>
+    <p>AI 개념 질문 (ex: 머신러닝과 딥러닝의 차이)</p>
+  </li>
+  <li>
+    <p>CS 기본 질문 (ex: 퀵소트에 대해 설명, 역행렬 구하는 방식)</p>
+  </li>
+</ol>
+
+<h4 id="section-3">💻 현실 대학원생의 삶</h4>
+<p>직장인 대학원은 보통 야간 과정으로 진행됩니다. 기성님은 월, 화, 목요일 퇴근 직후 대학원으로 달려가 저녁 6시 45분부터 9시 50분까지 수업을 듣는 바쁜 일상을 보내고 계셨습니다. 대학교 때 보던 인공지능 시험과 비슷한 중간/기말고사를 치르는 등 학업의 강도도 상당했는데요.</p>
+
+<p>솔직히 많이 피곤하고 힘들지만, 얻어가는 것이 분명히 많기에 배우고 공부할 의지가 있는 분들에게는 대학원 진학을 추천한다고 말씀해주셨습니다.</p>
+
+<h4 id="section-4">🗣️ 발표를 마치며</h4>
+<p>직장 생활과 학업을 병행하는 것의 어려움과 보람을 생생하게 느낄 수 있는 시간이었습니다. 막연하게만 생각했던 직장인의 대학원 진학에 대해 구체적인 로드맵을 그려볼 수 있었고, 끊임없이 배우고 성장하려는 선배님의 모습에 큰 자극을 받았습니다. 커리어 확장을 고민하는 에코노 회원들에게 매우 유익한 발표였습니다!</p>
+
+<hr />
+
+<h3 id="speaker-22----------">🎙️ [Speaker] 22기 김수민님 - 생각보다 쉬운 오픈소스 기여와 예상보다 큰 배움</h3>
+
+<p>두 번째 연사는 크래프톤에서 근무하고 계신 22기 김수민님께서 ‘오픈소스 해보니까 이런 이야기’라는 주제로 발표해주셨습니다. 수민님은 크래프톤에서 단기 이벤트 페이지를 빠르게 제작하고 관리하는 업무를 하고 계신데요. 업무 특성상, 코드 품질 개선보다는 빠른 개발 속도가 우선시되는 환경에서 근무하고 계셨다고 합니다.</p>
+
+<h4 id="section-5">😥 개발자로서의 회의감, 그리고 만난 활력제</h4>
+<p>유지보수 없이 단기적으로 사용되고 사라지는 코드를 반복해서 작성하다 보니, 어느덧 개발자로서의 성장에 대한 회의감이 찾아왔다고 합니다. 바로 그때, 오픈소스 기여라는 새로운 목표가 삶의 활력제가 되어주었습니다.</p>
+
+<p>처음에는 작은 버그를 발견해 이슈를 올리고 간단한 코드를 수정하는 것부터 시작했습니다. 얼마 뒤, 자신의 코드가 반영된 릴리즈 노트에 이름이 올라간 것을 보고 엄청난 성취감을 느꼈고, 이를 계기로 본격적인 오픈소스 기여의 세계에 빠져들게 되었다고 합니다. 물론 그 과정에서 많은 시행착오도 겪으셨다고 해요.</p>
+
+<h4 id="section-6">🔎 그래서, 오픈소스 기여하면 뭐가 좋은데?</h4>
+<p>수민님은 오픈소스 기여를 통해 얻을 수 있는 실질적인 장점들을 다음과 같이 정리해주셨습니다.</p>
+
+<p>기술적 성장: 소규모 프로젝트에서는 경험하기 힘든 기술(ex: MongoDB Sharding, Kubernetes)을 다뤄볼 수 있습니다.</p>
+
+<p>넓어지는 시야: 전 세계 실력자들의 코드 리뷰를 통해 코드 퀄리티, 테스트 코드 작성법, 하위 호환성 등에 대한 시야가 넓어집니다.</p>
+
+<p>새로운 기회: 링크드인 등을 통해 예상치 못한 사람들과 네트워킹하며 새로운 기회를 얻을 수 있습니다.</p>
+
+<h4 id="section-7">🚀 처음이어도 괜찮아! 이슈 선정 꿀팁</h4>
+<p>오픈소스 기여, 처음 시작이 막막하게 느껴질 수 있는데요. 수민님은 자신만의 이슈 선정 기준을 공유해주셨습니다.</p>
+
+<ol>
+  <li>
+    <p>Github Issue 활용: good first issue, help wanted 등 초심자를 위한 라벨이 붙은 이슈를 공략합니다.</p>
+  </li>
+  <li>
+    <p>메인테이너의 확인 유무: 메인테이너가 직접 작성했거나 리뷰한 이슈는 신뢰도가 높습니다.</p>
+  </li>
+  <li>
+    <p>AS-IS / TO-BE가 명확한가: 문제 상황과 원하는 결과가 명확하게 정의된 이슈가 기여하기 좋습니다.</p>
+  </li>
+</ol>
+
+<p>“일일이 찾기 너무 힘들 것 같다구요? 우리에겐 AI가 있습니다!” 수민님은 미리 작성해 둔 프롬프트를 활용해 자신의 기준에 맞는 이슈를 효율적으로 찾는 꿀팁까지 전수해주셨습니다.</p>
+
+<h4 id="section-8">🗣️ 발표를 마치며</h4>
+<p>이번 발표는 개발자로서의 성장에 대한 고민을 가진 많은 회원들에게 큰 울림을 주었습니다. 특히 ‘어떻게 시작해야 할지’ 막막했던 오픈소스 기여에 대해 구체적이고 현실적인 가이드를 제시해주셔서 매우 유익한 시간이었습니다. 발표를 듣고 나니 당장이라도 GitHub에 들어가 ‘good first issue’를 검색해보고 싶은 마음이 들었습니다!</p>
+
+<hr />
+
+<h3 id="speaker-21-----------">🎙️ [Speaker] 21기 권순찬님 - 금융권 개발자는 어떤 개발자고, 어떻게 개발하고, 누가 되는걸까?</h3>
+
+<p>마지막 연사는 Koscom에 재직 중인 21기 권순찬님께서 맡아주셨습니다. ‘금융권 개발자’라는, 많은 주니어 개발자들이 궁금해하지만 정보를 얻기 어려운 주제에 대해 깊이 있는 이야기를 들려주셨습니다. 순찬님은 우리가 증권사 앱으로 주식 거래를 할 때 그 주문이 한국거래소까지 안전하게 전달되도록 하는 핵심 IT 인프라를 만드는 Koscom에서 근무하고 계신데요, 그 생생한 경험을 바탕으로 금융권 개발자의 모든 것을 알려주셨습니다.</p>
+
+<h4 id="vs---">🔎 금융권 vs 비금융권, 무엇이 다른가?</h4>
+<p>가장 먼저, 일반적인 IT 기업과 금융권 개발 환경의 차이점을 명확하게 짚어주셨습니다.</p>
+
+<ul>
+  <li>
+    <p>업무의 중대성: “전산 장애로 7분간 주식 거래 중단” 같은 뉴스 헤드라인처럼, 금융권에서는 작은 버그 하나가 사회적, 경제적으로 엄청난 파장을 일으킬 수 있습니다. “큰 힘에는 큰 책임이 따른다”는 말처럼, 안정성과 책임감이 무엇보다 중요시됩니다.</p>
+  </li>
+  <li>
+    <p>일하는 방식: 보안이 최우선이기 때문에, 개인 단말 PC, 인터넷망 PC, 내부망 PC로 분리된 환경에서 개발을 진행합니다(망분리). Port 하나를 열거나 컬럼명을 변경하는 사소한 작업도 여러 단계의 결재를 거쳐야 하는 보수적인 업무 문화 또한 큰 특징입니다.</p>
+  </li>
+  <li>
+    <p>추구하는 인재상: 순수 개발 실력도 중요하지만, 그보다는 금융 도메인 지식을 갖춘 ‘만능 플레이어’를 선호합니다. 회사에서 새로 가르쳐서라도 도메인 전문가로 키우려는 경향이 강하다고 합니다.</p>
+  </li>
+</ul>
+
+<h4 id="vs----1">⚖️ 안정적인 평생 직장 vs 자유로운 개발자 커리어</h4>
+<p>그렇다면 어떤 사람에게 금융권 커리어를 추천할 수 있을까요? 순찬님은 두 커리어의 장단점을 저울에 비유하여 명확하게 보여주셨습니다.</p>
+
+<ul>
+  <li>
+    <p>일반 개발자 커리어: 자유로운 이직이 가능하고, 실력에 따라 상방이 활짝 열린 연봉과 처우를 기대할 수 있습니다.</p>
+  </li>
+  <li>
+    <p>금융권 커리어: 이직이 상대적으로 자유롭지 않고 연봉 상/하방이 어느 정도 정해져 있지만, ‘평생 직장’ 이라는 말이 어울릴 정도의 강력한 고용 안정성과 높은 평균 연봉을 보장받습니다.</p>
+  </li>
+</ul>
+
+<p>결국 ‘안정성’과 ‘자유도’ 중 어떤 가치를 더 중요하게 생각하는지에 따라 선택이 달라질 수 있음을 알 수 있었습니다.</p>
+
+<h4 id="a-to-z-">📄 금융권 취업, A to Z 가이드</h4>
+<p>마지막으로 금융권 취업을 준비하는 후배들을 위해 현실적인 꿀팁을 대방출해주셨습니다. 금융권에서 공통적으로 선호하는 지원자는 다음과 같습니다.</p>
+
+<ul>
+  <li>
+    <p>컴퓨터공학 관련 전공과 뒤처지지 않는 학점</p>
+  </li>
+  <li>
+    <p>부트캠프(SSAFY, 우테코 등) 수료 경험</p>
+  </li>
+  <li>
+    <p>백준 골드2 ~ 플래티넘5 수준의 코딩 테스트 실력</p>
+  </li>
+  <li>
+    <p>성실함을 보여줄 수 있는 대외활동 및 수상 경력</p>
+  </li>
+  <li>
+    <p>개발 직무라고 절대 무시해서는 안 되는, 정성껏 쓴 자기소개서</p>
+  </li>
+</ul>
+
+<h4 id="section-9">🗣️ 발표를 마치며</h4>
+<p>이번 발표는 막연하게만 느껴졌던 ‘금융권 개발자’의 실제 업무 환경, 문화, 그리고 커리어 패스까지 속속들이 알 수 있었던 귀중한 시간이었습니다. 특히 어떤 가치관을 가진 사람이 금융권에 더 잘 맞을지 스스로 생각해보는 계기가 되었습니다. 금융권 취업을 고민하는 에코노 회원들에게는 그 어떤 정보보다 값진 맞춤형 가이드가 되었을 것이라 생각합니다!</p>
+
+<h2 id="section-10">2부</h2>
+
+<p>선배님들의 유익한 발표가 끝난 2부에서는, 에코노 피플들이 서로의 생각과 경험을 나누는 네트워킹 시간이 이어졌습니다.</p>
+
+<h3 id="section-11">💌 에코노피플들의 고민상담소 💌</h3>
+<p>2부의 첫 번째 프로그램은 ‘에코노피플들의 고민상담소’였습니다! 이 시간에는 에코노피플들이 한데 모여 서로의 고민을 나누고 공감하며 이야기 나누는 시간을 가졌는데요.</p>
+
+<p>“자기관리를 꾸준히 하려면 어떤 점이 가장 중요하다고 생각하시나요?”</p>
+
+<p>“건강관리와 공부 사이의 균형을 잡기가 힘들어요.”</p>
+
+<p>“신입 또는 경력 개발자를 선발할 때 어떤 기준을 가지고 선발하는지 궁금해요.”</p>
+
+<p>“GPT가 없던 시절에는 코딩을 어떻게 했는지 궁금합니다.”</p>
+
+<p>와 같은 여러 고민에 대해 이야기를 나누었습니다. 선배 기수분들의 조언과 후배 기수들의 의견을 들으며 다양한 생각을 나눌 수 있는 좋은 시간이었습니다.</p>
+
+<p>특히 ‘GPT가 없던 시절에는 어떻게 코딩했는가’에 대한 이야기가 인상 깊었는데요. 지금 우리가 모르는 것을 GPT나 Gemini에 물어보는 것과 같이, 과거에는 구글링이나 스택 오버플로우에서 검색하며 답을 찾아 나갔다고 합니다. 또한, 요즘 AI에 의존하며 코드 구조를 제대로 이해하지 못하는 ‘바이브 코딩’을 하는 경우가 많은데, 코드를 직접 짜보는 경험을 통해 개발 실력을 키우는 것이 중요하다고 전한 말이 기억에 남았습니다</p>
+
+<h3 id="section-12">🗣️ 주제별 토크타임</h3>
+<p>2부 두 번째 프로그램은 ‘주제별 토크타임’이었는데요, 
+AI, 협업, 성장, 휴식, 비전, 에코노라는 6가지 키워드가 적힌 테이블에 20분마다 자유롭게 이동하며 이야기를 나누는 방식으로 진행되었는데요.</p>
+
+<p>특히 현업에 계신 선배님들이 각 테이블에 자리하여 주니어들의 궁금증을 해소해주는 멘토 역할을 톡톡히 해주셨습니다. 다양한 기수의 선배와 후배들이 한데 어우러져 각자의 경험과 인사이트를 나누는 모습이 인상적이었습니다.</p>
+
+<hr />
+
+<h2 id="section-13">단체 사진 촬영</h2>
+
+<p>행사를 마무리하고 다 같이 단체사진을 촬영하였습니다!
+에코노베이션의 활동 회원과 졸업 회원이 모여 있는 귀한 사진이네요!~
+단체사진은 에코노 포즈로 마무리했습니다!</p>
+
+<p><img src="https://velog.velcdn.com/images/reuscap/post/e1f3a43e-0d3c-44dc-a47d-01e4522eaa22/image.png" alt="제6회 Hello, ECONO! 단체사진" /></p>
+
+<hr />
+
+<p>Hello, ECONO!에서 소중한 경험을 나눠주신 연사분들께 감사의 인사를 전합니다:) 이번 Hello, ECONO!를 통해 다양한 경험을 간접적으로 접해보고 저를 돌아볼 수 있었습니다. 다음에는 어떤 이야기들이 찾아올지 더욱 기대가 되네요!</p>
+
+<p>이를 끝으로 제6회 Hello, ECONO!에 대한 리뷰를 마치도록 하겠습니다.</p>
+
+<p>읽어주셔서 감사합니다.🙇</p>]]></content><author><name>ReusCap</name></author><category term="HELLO_ECONO" /><category term="HELLO_ECONO" /><summary type="html"><![CDATA[제6회 Hello, ECONO! 리뷰]]></summary></entry><entry><title type="html">[2025 SUMMER DEV] 전남대학교 학생들을 위한 메뉴 추천 서비스 ‘전맛탱’, BAP팀</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_BAP.html" rel="alternate" type="text/html" title="[2025 SUMMER DEV] 전남대학교 학생들을 위한 메뉴 추천 서비스 ‘전맛탱’, BAP팀" /><published>2025-08-12T00:00:00+09:00</published><updated>2025-08-12T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C%20%ED%9A%8C%EA%B3%A0%EB%A1%9D_BAP</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_BAP.html"><![CDATA[<h2 id="summer-dev--------bap">[2025 SUMMER DEV] 전남대학교 학생들을 위한 메뉴 추천 서비스 ‘전맛탱’, BAP팀</h2>
+
+<h3 id="section">프로젝트 소개</h3>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/df85dfc4-0488-4a00-a2cd-f212a07067e7/image.png" alt="BAP 대표 사진" /></p>
+
+<p>전맛탱은 ‘JMT’와 ‘전남대’를 결합한 이름으로, 전남대학교 학생들을 위한 메뉴 추천 서비스입니다. 단순한 가게 정보 제공을 넘어서, 학생들의 실제 후기와 좋아요 데이터를 기반으로 인기 메뉴를 추천하고, 사용자 참여로 메뉴 데이터를 축적해 나가며, 학생들의 메뉴 선택 고민을 줄이는 것이 주요 목표입니다.</p>
+
+<p><br /></p>
+
+<h3 id="section-1">팀원 소개</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/b2cdd558-8067-49d4-8e9a-b4c929c7f644/image.png" alt="승희" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/308fdf70-da89-4930-8c78-5c9f676aced6/image.png" alt="태은" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/48f0c7f8-aeac-4bd3-b4d3-bc8b92f4013d/image.png" alt="영현" width="250" /&gt;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">PM    승희</td>
+      <td style="text-align: center">FE    태은</td>
+      <td style="text-align: center">BE    영현</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<h3 id="section-2">인터뷰</h3>
+
+<p><strong>Q. 프로젝트를 하면서 어떤 문제를 겪었나요?</strong></p>
+
+<p>안드로이드 앱 개발 후, 이를 웹(PWA)로 전환하는 과정에서 카카오 로그인 구현에 어려움이 있었습니다. 기존 네이티브 앱에서는, 앱이 카카오 SDK로 직접 액세스 토큰을 받아 이를 백엔드에 전달해 로그인 처리를 했습니다. 하지만 웹 환경(PWA)에서는 보안 문제로 토큰을 직접 다룰 수 없어, 1회용 인가 코드만 발급받아 백엔드로 전달해야 했습니다. 이로 인해 로그인 로직이 완전히 바뀌었고, 토큰 발급 및 로그인 처리의 책임이 앱에서 백엔드로 넘어가면서 구현에 꽤나 애를 먹었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 하기 전 후 달라진 점이 있다면?</strong></p>
+
+<p>(태은) 사실 프로젝트를 시작하기 전, 저 앱개발 공부를 막 시작한지 초보자였고, 개발 팀 프로젝트도 이번이 처음이었습니다. 그래서 초기에는 기본적인 팀 커뮤니케이션, 회의 방식, 의견 조율 같은 부분부터 하나하나 익혀나갔습니다. 또한 프로젝트를 진행하면서 Flutter를 이용한 앱 개발의 흐름을 실제로 경험하고, 앱을 출시해보며 많은 점을 배웠습니다. 출시 과정 전반을 직접 겪으면서 앱과 웹(PWA)의 차이점, 앱과 백엔드 간의 통신 방식, 실제 배포 및 유지보수 과정 등을 체득할 수 있었습니다. 단순히 코딩을 넘어서 여러 팀원들과 하나의 서비스를 만들어내는 전 과정을 경험하며, 개발자로서 한층 성장할 수 있었던 값진 경험이었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 시작하는 팀에게 전해줄 꿀팁을 말해주세요!</strong></p>
+
+<p>(승희) 완벽한 기획보다 빠른 실행과 피드백 수용이 핵심이라는 말을 전하고 싶습니다. 모든 기능을 다 넣으려 하기보다, 사용자가 진짜 원하는 기능 하나를 먼저 잘 구현하고 테스트해보는 것이 더 중요했습니다. 그리고 꼭! 피드백을 받을 수 있는 구조를 미리 만들어두세요. 동아리원들의 조언은 물론, 간단한 설문이나 인터뷰 방식이라도 준비해두면 사용자 반응을 놓치지 않고 바로 반영할 수 있습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트의 주요 목표와 성과는 무엇이었고, 이를 달성하기 위해 어떤 전략을 사용했나요?</strong></p>
+
+<p>(승희) 전맛탱 프로젝트의 목표는 명확했습니다. “이왕 만드는 거라면 진짜 도움이 되는 앱을 만들자”는 생각을 팀원 모두가 공유했고, 단순한 아이디어에 그치지 않고 실제로 전남대 학생들이 사용하는 앱을 만들어보는 것, 나아가 앱 출시와 사용자 피드백 수집까지 경험해보는 것을 핵심 목표로 삼았습니다.
+이를 위해 MVP 방식의 개발 전략을 택했습니다. 처음부터 완성된 앱을 만들기보다는, 꼭 필요한 기능만 빠르게 구현한 뒤 사용자 반응을 바탕으로 계속해서 개선해 나가는 방식을 선택했습니다. 비공개 테스트와 설문조사를 병행하면서 실제로 어떤 기능이 필요한지를 파악했고, 그 결과를 바탕으로 우선순위를 정해 기능을 하나씩 추가해 갔습니다. 덕분에 팀 내부 기준이 아닌 사용자 관점에서 앱을 만들어간다는 감각을 팀 전체가 경험할 수 있었고, 앱의 완성도도 자연스럽게 높아졌습니다.
+<br /><br />
+물론 순탄하지만은 않았습니다. iOS 대응에서 현실적인 어려움이 있었는데, 안드로이드는 비교적 수월하게 출시를 완료했지만, iOS는 개발 비용과 절차 문제로 일정을 보류할 수밖에 없었습니다. 이에 대한 보완책으로 PWA(Progressive Web App) 형태로 앱을 전환해, 아이폰 사용자도 홈 화면에 설치해 사용할 수 있도록 대응했습니다. 실제로 SUMMER DEV 부스에서 1시간 동안 30명 이상이 앱을 체험했고, 이 중 약 70%가 아이폰 사용자였던 점을 고려하면, PWA 전환도 충분히 의미 있는 선택이었다고 생각합니다.
+<br /><br />
+전체적으로 태은님과 영현님이 개발자로서 정말 많은 고생을 해주신 덕분에, 프로젝트를 좋은 결과로 마무리할 수 있었습니다. 짧은 기간 안에 데이터 관련 기능을 직접 수정하고, 데브 전에 PWA 전환까지 빠르게 마무리해주신 부분도 정말 감사드립니다. 단순한 기능 구현을 넘어 전반적인 방향성까지 함께 고민해주셔서, 기획자로서 큰 힘이 되었고 프로젝트 흐름도 훨씬 유연하게 이끌어갈 수 있었습니다. 이 자리를 빌려 감사의 말씀을 전합니다!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 개발 중 어려움을 겪은 경험이 있나요? 어떻게 해결해으며, 그 과정에서 얻은 교훈은 무엇인가요?</strong></p>
+
+<p>(태은) 이번 프로젝트는 제게 첫 앱 개발 경험이자, 처음으로 Flutter 프레임워크를 본격적으로 다뤄보는 기회였습니다. 하지만 동아리 내에 Flutter를 사용해본 선배가 없어, 개발을 독학해야 한다는 막막함부터 마주해야 했습니다. 특히 팀 내에서도 앱개발은 저 혼자 담당하고 있어 더욱 부담감이 컸습니다. 다행히도 Android 개발(Kotlin)을 공부해오신 멘토 선배의 조언을 통해 모바일 개발의 기본적인 구조를 이해할 수 있었고, 이후에는 교재 학습과 구글링, ChatGPT나 Gemini 같은 AI 도구를 적극적으로 활용하며 필요한 지식을 차근차근 쌓아갔습니다. 가장 큰 어려움은 백엔드와의 통신을 처음 접했을 때였습니다. 로그인 기능 하나를 구현하는 데에도 API 호출, 토큰 처리, 상태 관리 등 생소한 개념들이 많아 많은 시간을 소비했습니다. 하지만 이 과정을 통해 HTTP 통신 구조를 이해하게 되었고, 이후의 기능 구현 속도는 훨씬 빨라졌습니다. 또한 지도 기능을 연동하거나 앱을 PWA로 변환하는 과정에서도 여러 기술적 시행착오를 겪었지만, 스스로 문제를 정의하고 해결 방법을 찾아나가는 과정을 통해 문제 해결 능력이 한층 향상되었습니다. 이 경험을 통해 얻은 가장 큰 교훈은 막막하더라도 일단 시작하고 부딪혀보는 용기, 그리고 도움받을 수 있는 자원을 적극적으로 활용하는 자세의 중요성이었습니다. 혼자 모든 것을 해결해야 한다는 부담을 내려놓고, 다양한 방법으로 배우고 시도하다 보면 결국 해결에 다다를 수 있다는 점을 몸소 느낄 수 있었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 팀 내 협업에서 문제는 없었는지 궁금합니다!</strong></p>
+
+<p>(영현) 이번 프로젝트의 목표는 사용자 편의성을 높이기 위해 카카오 OAuth 로그인을 도입하는 것이었습니다. 하지만 구현 과정에서 팀원들이 카카오 OAuth 인증 프로세스에 대해 공동의 이해를 형성하지 못했고, 이로 인해 프론트엔드와 백엔드 간의 명확한 역할 정의가 이루어지지 않아 큰 어려움을 겪었습니다. 특히, 백엔드 팀이 일반 웹 환경을 기준으로 리다이렉트를 통해 로그인 로직을 처리하려 했지만, 저희가 개발하던 앱 환경에서는 웹과 달리 리다이렉션 처리가 복잡했습니다. 이로 인해 양 팀 모두 불필요한 시간과 노력을 낭비하게 되었습니다.
+<br /><br />
+이 경험을 통해 우리는 기술적인 구현 능력만큼이나 팀 내 소통과 공동의 이해가 얼마나 중요한지 깨달았습니다. 다음 프로젝트부터는 익숙치 않은 프로세스를 구현하기 전에 관련 팀원들이 모두 모여 각자의 개발 환경과 요구사항을 공유하고, 어떤 방식으로 역할을 분담할지 충분히 논의할 것입니다. 모든 팀원이 전체 프로세스에 대한 공통의 이해를 바탕으로 함께 설계하는 문화를 만들어 나갈 계획입니다. 이번 프로젝트의 어려움은 단순한 기술적 문제가 아닌 소통의 부재에서 비롯된 것이었으며, 이 경험을 통해 더 효율적으로 협업하는 방법을 배울 수 있었다고 생각합니다.</p>
+
+<p><br />
+<br /></p>
+
+<p>전남대학교 학생들의 메뉴 선택 고민을 덜어주기 위해 시작된 전맛탱 팀의 이야기를 전해드렸습니다.
+이 프로젝트는 기획 단계부터 실제 사용자인 학생들의 요구를 반영하며, 빠른 실행과 피드백 반영을 핵심 전략으로 삼아 발전해 왔습니다.
+특히 안드로이드 앱에서 PWA로 전환하는 과정과 카카오 OAuth 로그인 구현 등 다양한 기술적 도전을 해결해 나가며, 서비스 완성도를 한층 높였습니다.
+단순한 기능 구현을 넘어 소통과 협업의 가치를 깊이 체감한 전맛탱 팀이 앞으로 펼쳐갈 새로운 도전과 성장을 응원합니다!🍚🥄🥢</p>]]></content><author><name>sein</name></author><category term="SUMMER/WINTER_DEV" /><category term="dev" /><summary type="html"><![CDATA[[2025 SUMMER DEV] 전남대학교 학생들을 위한 메뉴 추천 서비스 ‘전맛탱’, BAP팀]]></summary></entry><entry><title type="html">[2025 SUMMER DEV] AI 자동 피드백을 통한 메타인지 강화 학습 플랫폼 ‘Tabula’, Ecode팀</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_Ecode.html" rel="alternate" type="text/html" title="[2025 SUMMER DEV] AI 자동 피드백을 통한 메타인지 강화 학습 플랫폼 ‘Tabula’, Ecode팀" /><published>2025-08-12T00:00:00+09:00</published><updated>2025-08-12T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C%20%ED%9A%8C%EA%B3%A0%EB%A1%9D_Ecode</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_Ecode.html"><![CDATA[<h2 id="summer-dev-ai--------tabula-ecode">[2025 SUMMER DEV] AI 자동 피드백을 통한 메타인지 강화 학습 플랫폼 ‘Tabula’, Ecode팀</h2>
+
+<h3 id="section">프로젝트 소개</h3>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/83a62f88-8107-4171-a86c-7867966655b1/image.png" alt="Ecode 대표 사진" /></p>
+
+<p><strong>Tabula</strong>는 기존 백지 학습법의 한계를 극복하기 위해 개발된 <strong>메타인지 강화 학습 플랫폼</strong>입니다.</p>
+
+<p>백지학습에 대한 막막함과 수기 채점의 비효율성 문제들을 해결하고자 기획되었으며, <strong>학습자료를 분석</strong>하고 <strong>AI 기반 피드백</strong>을 제공하여 사용자의 학습 효율성을 높입니다.</p>
+
+<p><strong>프로젝트의 핵심 기능</strong>은 다음과 같습니다.</p>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/4d393bfa-769e-4143-8d09-418aba635980/image.png" alt="Ecode 기능 소개 사진" /></p>
+
+<p><strong>백지학습법</strong>이란?</p>
+
+<p>학습한 내용을 백지에 떠올려 적어보는 방식으로, 아는 것과 모르는 것을 명확히 구분하여 효과적인 복습과 기억력 향상에 도움을 주는 공부법입니다.</p>
+
+<p><br /></p>
+
+<h3 id="section-1">팀원 소개</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/511bbf05-ebf8-4d78-b741-b947cff3fdf1/image.jpeg" alt="가연" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/f6f40f3c-23a8-4392-8cd1-905b97df547c/image.jpeg" alt="서윤" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/c5d51ac7-850c-4111-82b3-7ae524091074/image.png" alt="다연" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/a649ab1d-06c0-4d0b-9ab9-25f49adc9111/image.png" alt="성빈" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/ad8cb800-176c-46ba-84c9-56afedaaef47/image.png" alt="현명" width="250" /&gt;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">FE    가연</td>
+      <td style="text-align: center">FE    서윤</td>
+      <td style="text-align: center">BE    다현</td>
+      <td style="text-align: center">AI    성빈</td>
+      <td style="text-align: center">AI    현명</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<h3 id="section-2">인터뷰</h3>
+
+<p><strong>Q. 프로젝트를 하면서 어떤 문제를 겪었나요?</strong></p>
+
+<p>프로젝트 초기에 단발성 개발, 프로젝트가 아닌 이를 대외적으로도 잘 활용해 보자고 이야기를 했었는데요. 개발을 빠르게 진행하고 공공데이터 경진대회, 창업 경진대회 등 다양한 곳에 지원을 하였지만 생각처럼 쉽게 수상의 기회가 오지 않았습니다. 사용자의 목소리, 지원 준비 과정에서의 문제점을 다시금 되돌아보고 더 발전시킬 수 있도록 노력하고 있습니다!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 하기 전 후 달라진 점이 있다면?</strong></p>
+
+<p>프로젝트를 통해 가장 크게 달라진 점은 실사용자 중심의 사고방식과 사업적 관점을 갖게 된 것입니다.
+<br /><br />
+타뷸라는 기획 단계에서부터 실사용자를 고려한 프로젝트였기 때문에, 설문 조사를 통해 사용자가 실제로 원하는 기능을 파악하고 꼼꼼하게 기획했습니다. 개발 과정에서도 지속적으로 다양한 피드백을 받으며 사용자의 입장에서 생각하려고 노력했고, 이를 통해 단순히 기능 구현에만 집중하던 기존의 개발 방식에서 벗어나 실제 사용성과 사용자 경험을 우선적으로 고려할 수 있었습니다.
+<br /><br />
+또한 사업화 과정을 경험하면서 팀 내부의 생각과 실제 사용자나 투자자들의 의견이 전혀 다를 수 있다는 것을 깨달았습니다. 이런 차이점들을 마주할 때마다 어떻게 개선할 수 있을지에 대해 팀원들과 함께 깊게 고민했고, 프로젝트를 단순히 완성하는 것을 넘어 어떻게 홍보하고 어필할 것인지도 중요하다는 것을 느꼈습니다. 수많은 회의와 토론을 통해 다양한 관점에서 문제를 바라보고 해결책을 찾는 과정에서 팀원들과 함께 성장할 수 있었다고 생각합니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 시작하는 팀에게 전해줄 꿀팁을 말해주세요!</strong></p>
+
+<p>프로젝트를 시작하기 전에 각 팀원의 목표를 명확하게 공유하는 시간을 가지는 걸 추천해요.<br />
+예를 들어, 이번 프로젝트를 통해 실제 사용자 테스트를 진행해보는 것이 목표인지,<br />
+혹은 특정 기술을 익히거나 실험해보는 것이 주된 목적인지 등,<br />
+개인과 팀의 기대치를 초기에 충분히 맞춰두면<br />
+나중에 방향성을 정해야 하거나 의견이 갈릴 때 큰 도움이 됩니다.<br />
+이렇게 팀 전체의 목표를 하나로 정리해두는 것만으로도 프로젝트의 완성도가 높아져요.<br /></p>
+
+<p><br /></p>
+
+<p><strong>Q. Summer Dev 프로젝트에서 개발자로 참여한 경험을 설명해 주세요. 어떤 역할을 맡았고, 주요 기술 스택은 어떻게 구성되었나요?</strong></p>
+
+<p>이코드팀의 기술 스택은 다음과 같습니다.</p>
+
+<ul>
+  <li>BE :SpringBoot, MongoDB</li>
+  <li>FE : Typescript, Next.js, Tailwind</li>
+  <li>AI : LangGraph, Pinecone</li>
+  <li>Infra : AWS EC2, Docker</li>
+</ul>
+
+<p>이번 프로젝트에서는 워크스페이스 구현을 맡았습니다.
+실시간으로 AI 학습의 진행 상황을 보여주기 위해 SSE(Server-Sent Events)를 활용한 로딩 프로그래스 구현을 담당했어요.
+또한 자료 업로드와 단계별 키워드 출력, 각 학습 결과에 대한 디테일 페이지 구성을 맡았습니다. 사용자 흐름이 어색하지 않도록 UI/UX 를 구성하려고 노력했습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 개발 중 어려움을 겪은 경험이 있나요? 어떻게 해결해으며, 그 과정에서 얻은 교훈은 무엇인가요?</strong></p>
+
+<p>프로젝트 개발 중 배포 환경에서 SSE 연결이 끊기는 문제를 겪었고, nginx 설정 변경을 통해 해결한 경험이 있습니다.
+<br /><br />
+타뷸라에서 제공하는 채점 기능은 여러 AI API를 사용하는 구조로 되어 있습니다. 실행 시간이 꽤 걸리기 때문에, 사용자들의 지루함을 덜기 위해 SSE를 사용한 실시간 로딩 기능을 도입했습니다. 로컬 환경에서는 정상적으로 작동했지만, AWS EC2에 배포한 후에는 연결이 중간에 끊어지는 문제가 발생했습니다.
+<br /><br />
+문제의 원인은 nginx의 기본 설정이었습니다. nginx는 연결 시간 제한과 프록시 버퍼링, 캐싱 기능이 기본적으로 활성화되어 있어서 긴 시간 동안 연결을 유지해야 하는 채점 과정에서 타임아웃이 발생했습니다. 처음 겪는 에러의 원인을 파악하는데 이틀 정도의 시간이 걸렸고, 다양한 레퍼런스를 찾아보며 여러 설정을 시도해 본 끝에 nginx 설정 파일에 SSE 전용 설정을 추가해서 문제를 해결할 수 있었습니다.
+<br /><br />
+이 경험을 통해 원활한 개발을 위해서는 구현 로직뿐만 아니라 인프라 환경에 대한 이해도 매우 중요하다는 것을 깨달았고, 로컬과 배포 환경의 차이점을 미리 고려하는 역량의 필요성을 느꼈습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트의 기술적인 도전 과제나 혁신적인 부분은 무엇이었나요?</strong></p>
+
+<p>저희 프로젝트에서 기술적인 도전과제는 사용자의 학습 결과물에 있는 손글씨를 단순 텍스트로 변환하는 것을 넘어, 기호, 위치, 전체적인 맥락까지 반영한 디지털 데이터로 변환하는 것이었습니다.
+<br /><br />
+처음에는 일반적인 OCR 모델을 고려했지만, OCR은 손글씨를 텍스트로 변환하는 데는 뛰어나지만, 저희가 원했던 기호나 핵심 내용의 위치 같은 구조적인 정보와 문맥을 파악하는 데는 명확한 한계가 있었습니다. 이를 해결하기 위하여 저희는 OCR모델과 멀티모달 LLM모델을 모두 사용하여 사용자의 손글씨를 텍스트로 변환하는데 강점이 있는 OCR모델(Google Vision API)를 활용하여 일차적으로 텍스트와 각 텍스트의 위치좌표를 추출했고 이후 멀티모달 LLM(Gemini 2.5 flash lite)에게 앞단에서 OCR이 추출한 텍스트 데이터와 사용자가 학습한 결과물 이미지를 같이 제공하여 LLM이 오탈자를 수정하고 맥락정보를 반영할 수 있도록 파이프라인을 구현하였습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 팀 내 협업에서 문제는 없었는지 궁금합니다!</strong></p>
+
+<p>매주 정해진 시간에 회의를 진행하고 필요에 따라 추가적인 회의도 진행했는데요. 분야별 논의 후에 전체 회의가 있다보니 협업에 있어 좀 더 효율성을 높일 수 있었습니다. 또한 팀에서 추가적인 급한 논의 사항이 생기면 대면 비대면 회의 가리지 않고 함께 논의하고 작업을 하면 형태로 진행했습니다. 모두가 각자 위치에서 맡은 바 최선을 다해주었기 때문에 협업하는 과정에서 큰 어려움이 없었던 것 같아요!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 본인 팀만의 특별한 협업 방식이 있나요? 있다면 소개해주세요.</strong></p>
+
+<p>저희 팀은 효율적이고 일관된 협업을 위해 GitHub의 프로젝트 기능을 적극적으로 활용하였습니다. 각자 할당된 작업에 대해 이슈를 생성하여, 해당 이슈를 기반으로 기능 단위로 브랜치를 생성하여 개발을 진행하였습니다. 작업이 끝난 후에는 PR(Pull Request)을 통해 리뷰를 진행하며 코드 품질을 관리하였습니다.
+<br /><br />
+특히, PR 리뷰를 의무화하면서 단순히 오류를 잡는 것을 넘어 코드 스타일, 로직의 효율성, 예외 처리 방식 등까지 폭넓게 리뷰하며 팀원 간의 기술적 성장에도 도움이 되었습니다. 이를 통해 자신이 맡은 기능 외에도 전체 코드의 흐름을 이해하는 습관이 자연스럽게 형성되었습니다.
+<br /><br />
+또한, 매주 1회 팀 전체 회의와 코어타임을 운영하여, 각 파트별 진행 상황 공유 및 신규 기능 도입에 대한 논의를 진행하였습니다. 코어 타임을 통해 팀원들이 한 자리에 모여 집중 개발을 진행하면서 원활한 커뮤니케이션과 일정 관리가 가능했고, 단기간 내 서비스 개발을 마무리할 수 있었습니다.</p>
+
+<p><br />
+<br /></p>
+
+<p>손글씨 기반 학습의 한계를 극복하고 실사용자 중심의 학습 경험을 제공하기 위해 도전한 Ecode 팀의 이야기를 전해드렸습니다.
+Tabula는 기획 단계부터 철저히 사용자 의견을 반영했으며, 사업화 과정에서 얻은 다양한 시각을 서비스 개선에 적극적으로 녹여냈습니다.
+특히 OCR과 멀티모달 LLM을 결합한 기술적 도전은 학습 결과물의 맥락과 구조를 온전히 디지털로 재현하는 데 중요한 역할을 했습니다.
+백지학습법의 가치를 살려 더 많은 학습자들에게 효율적이고 맞춤형 학습 환경을 제공할 Ecode 팀의 행보를 기대합니다! 🚀</p>]]></content><author><name>sein</name></author><category term="SUMMER/WINTER_DEV" /><category term="dev" /><summary type="html"><![CDATA[[2025 SUMMER DEV] AI 자동 피드백을 통한 메타인지 강화 학습 플랫폼 ‘Tabula’, Ecode팀]]></summary></entry><entry><title type="html">[2025 SUMMER DEV] 별자리를 사랑하는 사람들을 위한 스팟 공유 &amp;amp; 모임 커뮤니티 플랫폼 ‘Starlight’, ST4R팀</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_ST4R.html" rel="alternate" type="text/html" title="[2025 SUMMER DEV] 별자리를 사랑하는 사람들을 위한 스팟 공유 &amp;amp; 모임 커뮤니티 플랫폼 ‘Starlight’, ST4R팀" /><published>2025-08-12T00:00:00+09:00</published><updated>2025-08-12T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C%20%ED%9A%8C%EA%B3%A0%EB%A1%9D_ST4R</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_ST4R.html"><![CDATA[<h2 id="summer-dev------------starlight-st4r">[2025 SUMMER DEV] 별자리를 사랑하는 사람들을 위한 스팟 공유 &amp; 모임 커뮤니티 플랫폼  ‘Starlight’, ST4R팀</h2>
+
+<h3 id="section">프로젝트 소개</h3>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/5f4aa054-4902-49c6-91e0-6b5a3392bace/image.png" alt="ST4R 대표사진" /></p>
+
+<p>은서: 안녕하세요. Starlight 서비스를 개발한 ST4R팀입니다.</p>
+
+<p>요즘 SNS를 보면 도심을 벗어나 자연 속에서 별을 보려는 사람들이 많아졌다는 걸 알 수 있습니다. 낭만 있는 데이트 코스로도 인기를 끌고 있고, 저희 학교에는 별 관측 동아리도 있을 만큼 별과 관련된 취미생활의 수요가 늘어나고 있습니다. 저도 별 보는 것을 정말 좋아하는데요! 조용한 곳에서 밤하늘을 바라보고 있으면 마음이 편해지더라고요 ㅎㅎ
+<br /><br />
+하지만 막상 별을 보러 가려 하면 숨은 관측 명소를 찾기가 쉽지 않았어요.</p>
+
+<p>또 장비가 없어서 제대로 관측하기 어려운 점이 아쉽더라고요ㅜ<br />
+그래서 저희는 이런 고민을 해결해 줄 서비스, <code class="language-plaintext highlighter-rouge">Starlight</code>를 기획하게 되었습니다!</p>
+
+<p>Starlight는</p>
+
+<ul>
+  <li>함께 별 보러 갈 사람을 찾고 싶은 사람,<br /></li>
+  <li>관측 꿀팁을 얻고, 관측 장비를 빌리고 싶은 사람,<br /></li>
+  <li>숨겨진 별 관측 명소를 알고 싶은 사람들을</li>
+</ul>
+
+<p>한 곳에 연결해주는 별자리 관측 동행 플랫폼입니다.
+<br /><br /></p>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/8efbfded-d733-4e01-aed0-229b4fbabdda/image.png" alt="ST4R 기능 소개 사진" />
+<br />
+주요기능은 다음과 같습니다.</p>
+
+<ul>
+  <li>
+    <p>게시판 기능<br />
+사용자들끼리 자유롭게 정보를 공유할 수 있습니다.<br />
+사진이나 지도를 통해 관측 스팟을 소개하거나, 별 관측 팁을 나누는 공간으로 활용됩니다.<br />
+장비 대여에 대한 정보도 이곳에서 확인할 수 있어요!<br /></p>
+  </li>
+  <li>
+    <p>모임 모집 기능<br />
+별 보러 갈 사람들과 함께할 수 있는 모임을 만들고 참여할 수 있습니다.<br />
+단순한 모임 개설이 아니라, 실시간 채팅 기능을 통해 참여자들끼리 <br />
+소통하며 유대감을 쌓고 지속적인 만남으로 이어질 수 있도록 설계했습니다.<br /></p>
+  </li>
+</ul>
+
+<p>추후 기능으로는 유저들이 매일매일 소소한 즐거움을 줄 수 있도록<br />
+별자리 운세 보기 기능을 추가할 계획입니다!<br /></p>
+
+<p>Starlight가, 저처럼 별을 좋아하는 사람들에게 <br />
+작은 설렘과 연결의 기회를 줄 수 있었으면 좋겠습니다. ✨
+<br /><br /></p>
+
+<h3 id="section-1">팀원 소개</h3>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/0f8717e0-4834-4034-85c1-f65331715fa8/image.png" alt="ST4R 팀 사진" /> <br /></p>
+
+<h3 id="section-2">기술 스택</h3>
+<p><img src="https://velog.velcdn.com/images/sseinn/post/63bab110-7899-4fd3-b854-cf141bccc001/image.png" alt="ST4R 기술 스택 사진1" /> <br />
+<img src="https://velog.velcdn.com/images/sseinn/post/7c6ccfd6-693b-4199-92d4-a9b3e3f38dcc/image.png" alt="ST4R 기술 스택 사진2" /> <br /></p>
+
+<h3 id="section-3">인터뷰</h3>
+
+<p><strong>Q. 프로젝트를 하면서 어떤 문제를 겪었나요?</strong></p>
+
+<p>성준: 저는 프로젝트를 진행하면서 카카오 지도를 여러 페이지에서 사용하는 구조를 구현하였는데요, 직접 테스트를 하던 중 지도가 회색 박스로만 나타나거나 “kakao is not defined”라는 에러가 발생하는 문제를 발견했습니다. 새로고침을 하면 정상적으로 로드되지만, 첫 진입 시에는 지도가 제대로 표시되지 않는 현상이 반복적으로 나타났습니다.
+<br /><br />
+문제를 분석해본 결과, 카카오 맵 스크립트가 완전히 로드되기 전에 지도를 초기화하려다 보니 오류가 발생하고 있던 것이었습니다. 특히 네트워크 속도가 느린 환경에서는 이 현상이 더욱 자주 발생했습니다. 이러한 문제를 해결하기 위해, 카카오 지도 스크립트의 로딩 상태를 전역에서 관리하는 구조를 새롭게 설계하게 되었습니다.
+<br /><br />
+구체적으로는, 첫 번째로 지도를 사용하는 컴포넌트에서만 스크립트를 로드하고, 이후의 컴포넌트들은 이 스크립트가 완전히 로드될 때까지 기다렸다가 지도를 초기화하도록 구성하였습니다. 이 과정에서는  promise 패턴을 활용해 중복 로딩을 방지하고, 비동기 로딩 타이밍을 안정적으로 제어할 수 있도록 하였습니다.
+<br /><br />
+이 경험을 통해 외부 라이브러리를 사용할 때 단순히 불러오는 것을 넘어서, 로딩 타이밍과 전역 상태를 어떻게 관리할 것인지에 대한 설계가 매우 중요하다는 것을 배웠습니다. 특히 사용자 환경이 모두 동일하지 않다는 점에서, 다양한 상황에서도 안정적으로 작동할 수 있는 초기화 구조를 고민하고 직접 구현해볼 수 있었던 값진 경험이었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 하기 전 후 달라진 점이 있다면?</strong></p>
+
+<p>수랑: 프로젝트를 진행하면서 가장 크게 배운 점은 뭐든지 괜히 복잡하게 만들지 말자는 것이었습니다. 이전에는 새로운 기술을 배우는 게 재미있어서 ‘나중에 필요할 수도 있지 않을까?’라는 생각으로 미리미리 기능을 만들어두는 습관이 있었습니다.
+<br /><br />
+예를 들어서 이번에 채팅 기능을 만들 때도 처음에는 성능이 중요하다고 생각해서 Redis에 임시로 데이터를 저장하고 10분마다 MySQL에 저장하는 방식을 생각했었습니다. 그런데 생각해보니까 이게 저희 프로젝트를 괜히 복잡하게만 만드는 것이였습니다.
+<br /><br />
+저희 프로젝트는 아직 개발 단계였고 MVP 만드는 것이 목표였는데, 당장은 저희 학교 사람들을 대상으로 하고, 수강신청처럼 한 번에 사람들이 몰릴 일도 없는 작은 프로젝트였습니다. 그래서 굳이 Redis까지 써가면서 복잡하게 만들 이유가 없었습니다.
+<br /><br />
+이런 경험을 하면서 YAGNI(You Ain’t Gonna Need It) 원칙의 중요성을 느끼게 되었습니다. 미래를 너무 걱정하지 말고 지금 당장 필요한 것만 집중해서 만드는 게 훨씬 좋다는 걸 깨달았고, 이제는 개발할 때마다 ‘이 기능이 정말 지금 필요한가?’, ‘더 간단하면서도 효과적인 방법은 없을까?’라는 질문을 스스로에게 던지는 습관이 생겼습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 시작하는 팀에게 전해줄 꿀팁을 말해주세요!</strong></p>
+
+<p>은서: 개발하다 보면 분명 막히는 순간들이 생기는데요, 그럴 땐 꼭 팀원들과 함께 이야기하면서 해결해 나가는 것을 추천해요! 저는 이번 프로젝트를 하면서 팀원들에게 많은 도움을 받았는데, 그 과정에서 스스로 깨달은 것들이 정말 값졌던 것 같아요. 혼자 고민할 때보다 함께 이야기 나누는 게 훨씬 빠르고, 그만큼 팀 전체가 함께 성장할 수 있는 기회가 되더라고요. 
+<br /><br />
+그리고 혹시 개발이 처음이라면, 두려워하지 말고 마음껏 도전해보셨으면 해요! 저도 이번 에코노 프로젝트가 프론트엔드 개발자로서의 첫 도전이었어요. 리액트를 공부하면서 동시에 개발을 진행하다 보니 속도도 느리고, 실력이 부족하다는 생각에 스스로 비교하게 되기도 했어요. 하지만 생각해보면, 모두에게 처음은 있었을 거예요. 무조건 잘해야 한다는 부담보다는, 즐거운 마음으로 시작해보세요. 처음엔 어려워 보여도, 결국 어떻게든 만들어지더라고요 ㅎㅎ
+<br /><br />
+그러니 자신을 믿고 한 번 부딪혀 보는 건 어떨까요?</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 개발 중 어려움을 겪은 경험이 있나요? 어떻게 해결했으며, 그 과정에서 얻은 교훈은 무엇인가요?</strong></p>
+
+<p>수랑: 프로젝트를 진행하면서 가장 큰 어려움은 프로젝트 초기 설정 단계였습니다. Spring 프로젝트의 build.gradle에서 의존성 버전을 설정할 때 최신 버전이 좋을 것이라고 생각하여 모든 의존성을 최신으로 설정했는데, 이것이 문제의 시작이었습니다. 빌드는 계속 실패하였고, 최신 버전이다 보니 문서화도 충분하지 않았으며, 몇몇 메서드들은 deprecated로 표시되어 있었습니다. 심지어 최신 버전임에도 불구하고 보안 취약점이 있다고 경고가 나오는 라이브러리도 있었습니다. 처음에는 간단할 것 같았지만 막상 해보니 가장 골치 아픈 부분이 바로 이 부분이었습니다. 이 문제를 GPT나 Gemini에게 물어보고 구글링을 통해 정보를 수집하면서 버전을 다양하게 변경해가며 gradle clean build를 계속 해보니 어찌저찌 해결이 되었습니다. 이를 통해 무작정 라이브러리를 최신 버전을 사용하는 것보다는 많은 개발자들이 사용하고 있는 검증된 버전이나 그보다 약간 최신인 안정적인 버전을 선택하는 것이 개발 하는데에 수월하다는 교훈을 얻었습니다.
+<br /><br /></p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트의 기술적인 도전 과제나 혁신적인 부분은 무엇이었나요?</strong></p>
+
+<p>은서: 저희 프로젝트에서 가장 기술적으로 도전이 되었던 부분은 WebSocket을 활용한 실시간 채팅 기능 구현이었습니다. WebSocket + STOMP 프로토콜을 사용하여, 클라이언트와 서버 간의 실시간 양방향 통신이 가능한 구조를 구현했습니다.
+<br /><br />
+처음에는 WebSocket의 동작 원리나 구조를 이해하는 것부터 시작하였습니다. 그 후 React 환경에서 소켓 연결을 안정적으로 유지하고, 메시지를 실시간으로 처리하는 로직을 구현하는 데 많은 시간을 들였습니다. 
+<br /><br />
+로직을 간단하게 설명해보면 사용자가 특정 모임에 참가하면, 해당 모임 ID를 기반으로 채널을 구독하게 됩니다. 이후 해당 채널에 접속한 사용자들은 실시간으로 메시지를 주고받을 수 있게 됩니다.
+<br /><br />
+이때 서버로부터 두 가지 type의 메시지를 받게 되는데요
+<br /><br />
+- <code class="language-plaintext highlighter-rouge">general</code> 타입: 사용자가 보낸 메세지로 분류하고 메세지를 채팅 화면에 띄어 줍니다.<br />
+- <code class="language-plaintext highlighter-rouge">updateReadTime</code> 타입: 특정 사용자의 최근 읽은 시간을 갱신해 줍니다. 여기서 갱신된 읽은 시간과 각 메시지의 발송 시간을 비교하여, 해당 메시지를 몇 명의 사람들이 채팅을 읽었는지 계산할 수 있게 됩니다.  즉, 실시간 읽음 여부를 구현하기 위한 기반 데이터로 활용됩니다.<br /></p>
+
+<p>읽은 시간을 갱신하는 조건은</p>
+
+<ol>
+  <li>사용자가 처음 채팅방에 들어갈 때<br /></li>
+  <li>사용자가 general 타입의 메세지를 받았을 때<br /></li>
+</ol>
+
+<p>이 두 경우를 “해당 사용자가 채팅을 읽었다”고 간주하고, 서버에 읽음 요청을 보내 사용자의 최근 읽음 시간을 갱신하도록 구현했습니다.
+<br /><br />
+또 채팅 내역을 무한 스크롤로 불러오는 것도 도전 과제 중 하나였습니다. 채팅은 위로 스크롤 하여 과거 메세지를 보기 때문에 역순으로 구현해야 했습니다. React Query의 <code class="language-plaintext highlighter-rouge">useInfiniteQuery</code> 훅을 사용하여 메시지를 페이지 단위로 불러왔고, 이를 역순으로 정렬하여 구현하였습니다.
+<br /><br />
+특히 React에서는 WebSocket 연결을 컴포넌트 생명주기에 맞춰 관리해야 했기 때문에 처음부터 전체 흐름을 설계하는 데 어려움을 느꼈습니다. 중간중간 에러가 날 때마다 원인을 찾아가면서 문제를 해결해 나갔고 이 과정에서 많은 시행착오를 거친 것 같습니다.
+<br /><br />
+이 모든 과정을 통해 단순한 API 호출을 넘어, 실시간성과 상태 관리의 복잡함을 직접 경험하고 해결해 본 것이 어려웠지만 저에게는 큰 도전이자 성장이었습니다.<br />
+또한 이 기능 덕분에 사용자들이 모임 안에서 자유롭게 소통할 수 있어 플랫폼의 완성도와 사용자 경험을 높이는 데 크게 기여했다고 생각합니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 개발자로서의 역량 향상을 위해 어떤 노력을 기울였으며, 이 프로젝트를 통해 어떤 기술적 성장을 이루었나요?</strong></p>
+
+<p>성준: 프로젝트를 하면서 가장 크게 느낀 점은 단순한 기능 구현보다 구조화와 유지보수가 훨씬 중요하다는 것이었습니다. 초반에는 게시글 컴포넌트 하나에 인증 확인, API 호출, 좋아요 처리, 댓글 관리, 이미지 뷰어 등 다양한 기능을 모두 넣다 보니 컴포넌트가 수백 줄이 넘어가는 거대한 구조가 되어버렸습니다. 당시에는 빠르게 기능을 구현하는 데에만 집중했기 때문에, 코드가 점점 복잡해지는 것을 실감하지 못했는데요, 어느 순간부터 작은 수정에도 다른 기능에 영향을 주는 일이 반복되면서 비효율을 크게 체감하게 되었습니다.
+<br /><br />
+이러한 문제를 해결하기 위해 리팩터링을 시작했고, 기능 단위로 커스텀 훅을 분리하는 방식으로 구조 개선을 시도했습니다. 예를 들어, 인증 관련 로직은 <code class="language-plaintext highlighter-rouge">useBoardDetailAuth</code>, 댓글 처리 로직은 <code class="language-plaintext highlighter-rouge">useBoardDetailComments</code>로 분리하여 역할을 명확히 나누고, 코드의 응집도를 높이는 동시에 결합도를 낮추는 구조를 만들어나갔습니다. 이를 통해 코드의 가독성과 테스트 용이성은 물론, 유지보수성도 큰 폭으로 향상되었습니다.
+<br /><br />
+또한 사용자 경험(UX) 측면에서도 많은 고민을 하게 되었는데요, 대표적으로는 낙관적 업데이트(Optimistic UI)를 도입하여 좋아요 버튼 클릭 시 서버 응답을 기다리지 않고 UI를 먼저 반영하게 하였습니다. 이후 서버 요청이 실패할 경우에는 다시 원래 상태로 복원하는 방식으로 안정성을 유지하였고요.
+<br /><br />
+추가로, 스마트 캐싱을 적용하여 한 번 조회한 게시글은 일정 시간 동안 캐시에 저장되도록 하여, 뒤로 가기 후 재진입 시에도 로딩 없이 빠르게 화면을 구성할 수 있도록 개선하였습니다. 에러 처리에 있어서도 단순히 “에러가 발생했습니다”라는 문구 대신, 네트워크 오류, 권한 문제, 삭제된 게시글, 토큰 만료 등 구체적인 상황에 맞는 안내 문구와 해결 방법을 함께 제시함으로써 사용자 혼란을 최소화하려 노력했습니다.
+<br /><br />
+이러한 일련의 과정을 거치며, 단순히 ‘동작하는 기능’을 만드는 것에서 한 발 더 나아가, 사용성과 유지보수성까지 고려한 설계와 구현이 얼마나 중요한지를 체감할 수 있었고, 실제 사용자 입장에서 시스템을 바라보며 기술과 사용자 경험 사이의 균형을 고민하는 개발자로서 한 단계 성장할 수 있었던 시간이었다고 생각합니다.</p>
+
+<p><br />
+<br /></p>
+
+<p>복잡한 기능을 단순히 구현하는 데서 나아가, 구조화와 유지보수성 향상을 목표로 리팩터링과 UX 개선에 힘쓴 ST4R 팀의 이야기를 전해드렸습니다.
+이 경험을 바탕으로 더 많은 사람에게 즐거운 별 관측 경험을 제공할 ST4R 팀의 Starlight 여정을 기대하겠습니다!🌌</p>]]></content><author><name>sein</name></author><category term="SUMMER/WINTER_DEV" /><category term="dev" /><summary type="html"><![CDATA[[2025 SUMMER DEV] 별자리를 사랑하는 사람들을 위한 스팟 공유 &amp; 모임 커뮤니티 플랫폼 ‘Starlight’, ST4R팀]]></summary></entry><entry><title type="html">[2025 SUMMER DEV] 작은 습관으로 기르는 과일 농장 ‘후르츠팜’, 뚜벅쵸팀</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_%EB%9A%9C%EB%B2%85%EC%B5%B8.html" rel="alternate" type="text/html" title="[2025 SUMMER DEV] 작은 습관으로 기르는 과일 농장 ‘후르츠팜’, 뚜벅쵸팀" /><published>2025-08-12T00:00:00+09:00</published><updated>2025-08-12T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C%20%ED%9A%8C%EA%B3%A0%EB%A1%9D_%EB%9A%9C%EB%B2%85%EC%B5%B8</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/12/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_%EB%9A%9C%EB%B2%85%EC%B5%B8.html"><![CDATA[<h2 id="summer-dev-------">[2025 SUMMER DEV] 작은 습관으로 기르는 과일 농장 ‘후르츠팜’, 뚜벅쵸팀</h2>
+
+<h3 id="section">프로젝트 소개</h3>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/4e2de7ac-b2c4-46ed-a1e0-6e2f959b5f91/image.png" alt="뚜벅쵸 대표사진" /></p>
+
+<p>안녕하세요. 작은 습관으로 기르는 과일 농장, 후르츠팜을 개발한 뚜벅쵸 팀의 세인입니다.</p>
+
+<p>어릴 적 칭찬을 받으면 스티커를 하나씩 붙혀본 경험이 있나요?</p>
+
+<p>작은 성취를 인정받으며 스티커를 하나씩 붙이던 경험을 착안하여<br />
+이 추억을 현대적인 방식으로 재해석해, 매일의 행동이 눈에 보이는 성과로 쌓이는 습관 형성 도구를 만들고자 했습니다.<br />
+그 결과, 포도알을 하나씩 채워가며 습관을 기록하고 완성해 나가는 해빗트래커가 탄생했습니다.</p>
+
+<p><br /></p>
+
+<p><img src="https://velog.velcdn.com/images/sseinn/post/f4e27c56-f4e4-4a8f-874d-81eb47685d26/image.png" alt="뚜벅쵸 기능 소개 사진" /></p>
+
+<p>주요 기능은 다음과 같습니다.</p>
+
+<ul>
+  <li>목록 기능<br />
+    <ul>
+      <li>사용자가 생성한 해빗트래커를 아이콘과 세부 정보로 간결하게 정리하여 목록에서 한눈에 확인할 수 있도록 구성하였습니다.</li>
+      <li>각 항목을 클릭하면 수정하거나 삭제할 수 있으며, 상세 정보를 조회할 수 있습니다.</li>
+    </ul>
+  </li>
+  <li>생성 기능<br />
+    <ul>
+      <li>습관 형성에 동기 부여를 유발시키는 목표와 응원하는 말을 설정할 수 있습니다.</li>
+      <li>시작일을 기준으로 수행 기간이 설정되어 보다 체계적인 습관 형성에 도움을 줍니다.</li>
+    </ul>
+  </li>
+  <li>기록 기능
+    <ul>
+      <li>작성한 습관 기록을 확인 할 수 있으며, 수행할 때마다 해빗트래커를 채울 수 있습니다.</li>
+      <li>경과 날짜를 통해 진행 상황을 파악할 수 있고, 목표를 달성하면 칭찬 도장을 받음으로써 미달성과 차별화된 피드백을 제공합니다. 
+<br /><br /></li>
+    </ul>
+  </li>
+</ul>
+
+<p>작은 행동 하나가 모여 나만의 작은 농장을 만들 듯,<br />
+많은 사람들이 이곳에서 자신만의 과일 농장을 가꾸며<br />
+성장의 달콤한 결실을 맛보게 되길 기대합니다.🍇</p>
+
+<p><br /></p>
+
+<h3 id="section-1">팀원 소개</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/2bbe6c7d-44a9-4336-8438-0e47c2de7404/image.png" alt="민경" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/4d0dda88-f206-4097-a720-647895e3106f/image.png" alt="세인" width="250" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/sseinn/post/02c220de-1f35-49f5-adb5-3a22978db0c4/image.png" alt="재륜" width="250" /&gt;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">FE    민경</td>
+      <td style="text-align: center">BE    세인</td>
+      <td style="text-align: center">BE    재륜</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<h3 id="section-2">인터뷰</h3>
+
+<p><strong>Q. 프로젝트를 하면서 어떤 문제를 겪었나요?</strong></p>
+
+<p><code class="language-plaintext highlighter-rouge">재륜</code>: 프로젝트 진행 중, 프론트엔드와 백엔드가 연동되지 않고 CORS 에러가 지속적으로 발생했습니다. 
+처음에는 백엔드 설정 문제라고 판단하여, Spring의 CORS 관련 설정을 지속적으로 수정하고 테스트했지만 문제가 해결되지 않았습니다. 
+이리저리 살펴보니 문제의 원인은 프론트엔드에서 POST 요청을 보내야 할 API를 GET 요청으로 보내고 있었기 때문이었습니다. 
+이는 API 명세서에 잘못된 HTTP 메서드가 기재되어 있었기 때문이었습니다. API 명세서의 정확성이 얼마나 중요한지 체감했고, 이후엔 Swagger 문서를 적극 활용할 계획입니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 하기 전 후 달라진 점이 있다면?</strong></p>
+
+<p><code class="language-plaintext highlighter-rouge">민경</code>: 이번 프로젝트에서는 처음으로 리액트를 활용해 개발을 진행했습니다. 
+저번 프로젝트에서는 바닐라JS만을 사용했기 때문에, 리액트를 다루는 과정에서 생소한 부분이 많았습니다. 
+하지만 실제로 프로젝트를 진행해보니 리액트가 프론트엔드 개발하는 데 있어서 매우 효율적인 라이브러리라는 점을 느꼈습니다. 
+앞으로는 더욱 다양한 라이브러리를 적극적으로 활용해서 완성도 높은 결과물을 만들어 내고 싶습니다.
+<br /><br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">재륜</code>: 이번 프로젝트는 에코노베이션에서 진행한 두 번째 팀 프로젝트였습니다. 
+첫 번째 프로젝트에서는 Spring이나 백엔드 개발 자체가 처음이라, 제가 실질적인 기여보다 팀 내 깍두기 같은 역할에 가까웠습니다. 
+하지만 이번 프로젝트에서는 도메인 설계부터 API 구현, 배포까지 전체 백엔드 개발 플로우를 직접 맡아 진행했습니다. 
+모든 과정을 스스로 경험하면서 기술적 자신감이 생겼고, 협업과 문제 해결 능력 또한 확실히 성장했다고 느꼈습니다. 
+다음 프로젝트에서는 지금보다 더 나은 설계와 다양한 기능을 가진 결과물을 낼 수 있을 거라고 확신합니다.
+<br /><br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">세인</code>: 이번 프로젝트로 가장 크게 변화한 건 디자인의 재미입니다. 
+후르츠팜의 디자인을 주도적으로 이끌어 나간 경험은 저에게 큰 의미가 있었는데요. 
+개발을 할 때 보통 기획은 필수적으로 참여하게 되지만 디자인은 참여해 본 경험이 없었습니다. 
+후르츠팜의 와이어프레임부터 판넬, 로고 등 모든 요소를 만들어 나가니 프로젝트에 더욱 애착이 생겼던 같습니다. 
+<br /><br />
+가장 애착이 가는 건 후르츠팜의 로고 입니다.<br />
+로고를 제작하는 방법은 여러가지가 있었는데요.<br /></p>
+
+<ol>
+  <li>Chat Gpt를 이용해서 제작<br /></li>
+  <li>와이어프레임에 들어간 디자인 요소를 활용해 제작<br /></li>
+  <li>직접 제작<br /></li>
+</ol>
+
+<p>저는 직접 제작하는 방법을 택하였고 다양한 로고 레퍼런스를 보며 로고 디자인 방식을 구상해 나갔습니다. 
+후르츠팜 서비스는 다양한 색상이 활용되었기에 로고만큼은 심플하게 디자인 하고 싶다는 생각이 컸습니다.
+로고로 만들 대상은 후르츠팜의 메인 캐릭터인 포도를 대상으로,복잡한 조형미를 가진 포도를 단순하게 바꾸는 건 어려웠습니다.
+<br /><br />
+<img src="https://velog.velcdn.com/images/sseinn/post/ad22a4dc-5861-43c6-b290-51eee8d4d82f/image.png" alt="뚜벅쵸 로고 소개 사진" />
+<br /><br />
+로고 심볼은 포도알을 단순한 원형으로 구성하되,<br />
+알의 크기를 서로 다르게 조합함으로써 단순함 속의 다양성을 표현하였으며<br />
+또한 포도 꼭지는 하나의 곡선으로 미니멀하게 표현하여<br />
+실제 과일의 복잡한 형태를 단순화하며 시각적인 정돈감을 주고자 했습니다.
+<br /><br />
+이번 경험은 저에게 디자인의 즐거움과 가능성을 일깨워 주었고, 앞으로의 프로젝트에서도 기획뿐 아니라 디자인까지 주도적으로 참여하고 싶은 동기를 만들어 주었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 시작하는 팀에게 전해줄 꿀팁을 말해주세요!</strong></p>
+
+<p><code class="language-plaintext highlighter-rouge">민경</code>: 본격적인 개발을 진행하기 전에 준비 과정이 가장 중요합니다. 
+특히 일주일 단위로 마일스톤을 설정하고 개발 진행 상황을 자주 공유한 점이 가장 큰 도움이 되었습니다. 
+팀원마다 맡은 역할과 작업 속도가 다르기 때문에, 단순히 통신 뿐만 아니라 전반적인 개발 과정에서 서로의 진행 상황을 지속적으로 공유하는 것이 중요했습니다. 
+이런 과정을 통해 효율적으로 협업하며 프로젝트를 성공적으로 완수할 수 있었습니다!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 개발 중 어려움을 겪은 경험이 있나요? 어떻게 해결했으며, 그 과정에서 얻은 교훈은 무엇인가요?</strong></p>
+
+<p><code class="language-plaintext highlighter-rouge">세인</code>: 백엔드 개발은 제게 완전히 새로운 영역이었고, 자바 스프링부트의 높은 진입 장벽 앞에서 많은 어려움을 겪었습니다. 처음에는 AI의 도움을 받아 문제를 해결하려 했지만, 한계에 부딪히는 순간이 잦았습니다.
+그 과정에서 기술의 핵심은 도구가 아니라 원리를 이해하는 것이라는 중요한 교훈을 얻었습니다. 단순히 코드를 복사·붙여넣는 것이 아니라, 작동 원리와 흐름을 스스로 파악해야 비로소 문제를 해결하고 응용할 수 있다는 점을 깨달았습니다.
+이 경험은 앞으로 새로운 기술을 배울 때, 무작정 따라 하기보다 기초를 이해하고 구조를 파악하는 습관을 길러야 한다는 방향성을 제게 심어주었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 개발자로서의 역량 향상을 위해 어떤 노력을 기울였으며, 이 프로젝트를 통해 어떤 기술적 성장을 이루었나요?</strong></p>
+
+<p><code class="language-plaintext highlighter-rouge">재륜</code>: 프론트엔드와의 협업 효율성을 높이기 위해, 공통 응답 처리 구조를 적용했습니다. 
+처음에는 컨트롤러마다 각기 다른 형태의 응답을 반환하고 있어, 프론트엔드에서 일관성 있게 데이터를 처리하기 어려웠습니다. 
+이를 개선하기 위해 BaseResponse<T> 형식의 공통 응답 DTO를 도입하고, 모든 API가 동일한 구조로 응답할 수 있도록 설계했습니다. 
+또한, 예외 발생 시에도 ErrorResponse를 통해 일관된 형식의 에러 응답을 반환하도록 처리했습니다.</T></p>
+
+<p><br /></p>
+
+<p><strong>Q. 본인 팀만의 특별한 협업 방식이 있나요? 있다면 소개해 주세요.</strong></p>
+
+<p><code class="language-plaintext highlighter-rouge">민경</code>: 저희 팀은 UI 개발 뿐만 아니라 기능 기획 단계에서도 와이어프레임 구상이 필요했습니다. 
+하지만 와이어프레임은 팀 회의 시간에 빠르게 완성하기 어려워, 대면으로 의견을 나누기 쉽지 않았습니다. 
+그래서 저희는 팀 메신저를 통해 와이어프레임 진행 상황을 지속적으로 공유했고, 피그마 코멘트 기능을 적극적으로 활용해 의견을 주고 받았습니다. 
+또한 피그마 커서챗 기능과 팀 메신저를 사용해 실시간으로 소통함으로써, 대면 못지않은 효율적인 협업을 이뤄낼 수 있었습니다.</p>
+
+<p><br />
+<br /></p>
+
+<p>단순히 기능 구현에 그치지 않고, 디자인과 서비스 정체성을 하나로 엮어
+브랜드 완성도를 높인 후르츠팜 팀의 이야기를 전해드렸습니다.
+이번 경험을 바탕으로 더 많은 사람들이 즐겁게 습관을 가꾸고
+달콤한 성취를 맛볼 수 있는 후르츠팜의 여정을 기대하겠습니다! 🔥</p>]]></content><author><name>sein</name></author><category term="SUMMER/WINTER_DEV" /><category term="dev" /><summary type="html"><![CDATA[[2025 SUMMER DEV] 작은 습관으로 기르는 과일 농장 ‘후르츠팜’, 뚜벅쵸팀]]></summary></entry><entry><title type="html">에코노 뉴스 7~8월호</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/econo_news/2025/08/12/%EC%97%90%EC%BD%94%EB%85%B8-%EB%89%B4%EC%8A%A4-7~8%EC%9B%94%ED%98%B8.html" rel="alternate" type="text/html" title="에코노 뉴스 7~8월호" /><published>2025-08-12T00:00:00+09:00</published><updated>2025-08-12T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/econo_news/2025/08/12/%EC%97%90%EC%BD%94%EB%85%B8%20%EB%89%B4%EC%8A%A4%207~8%EC%9B%94%ED%98%B8</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/econo_news/2025/08/12/%EC%97%90%EC%BD%94%EB%85%B8-%EB%89%B4%EC%8A%A4-7~8%EC%9B%94%ED%98%B8.html"><![CDATA[<h2 id="section">에코노 뉴스 7~8월호</h2>
+
+<p><img src="https://velog.velcdn.com/images/turtlestory/post/f8b585ae-37fb-42a3-bb62-7a96a0a52138/image.png" alt="7,8월호" /></p>
+
+<p>에코노베이션의 다양한 활동을 기록하고 알리기 위해 에코노 뉴스 7~8월호가 찾아왔습니다.😊</p>
+
+<p>방학임에도 불구하고 동아리원들은 프로젝트, 행사, 교류 활동으로 바쁜 나날을 보냈습니다</p>
+
+<p>7~8월의 에코노베이션에서는 어떤 이야기들이 펼쳐졌는지 함께 살펴볼까요? 🙌</p>
+
+<p><br /></p>
+
+<h3 id="summer-dev">2025 SUMMER Dev</h3>
+
+<p><img src="https://velog.velcdn.com/images/turtlestory/post/7d4165e8-9807-4ea3-9681-5820106dcfb6/image.png" alt="devPoster" /></p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>&lt;img src="https://velog.velcdn.com/images/turtlestory/post/7bb7b643-2ebc-4d08-9452-1ed3e367333c/image.png" alt=’devfood’/&gt;</td>
+      <td>&lt;img src="https://velog.velcdn.com/images/turtlestory/post/27fc10b4-b0b0-4eae-8f50-6e7dadeaa90e/image.png" alt=’devpresentation’/&gt;</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>🔥 2025 Summer DEV가 7월 25일, 영명홀에서 성황리에 개최되었습니다!</p>
+
+<p>행사는 오후 1시부터 부스 시연과 프로젝트 발표 순으로 진행되었습니다.
+부스 시연 시간에는 한 학기 동안 에코노베이션에서 진행한 프로젝트 결과물을 직접 체험하고, 팀원들에게 궁금한 점을 묻는 열띤 소통이 이어졌습니다.
+참가자들은 다양한 아이디어와 창의적인 시도를 직접 보고 경험하며, 에코노베이션의 열정을 느낄 수 있었습니다.</p>
+
+<p>프로젝트 발표 시간에는 MacMorning, SEED, 4!, 융융융, BAP, DDUBUCKCHO, Ecode, ST4R팀이 무대에 올라, 프로젝트 진행 과정과 배운 점, 그리고 앞으로의 계획을 공유했습니다.</p>
+
+<p><img src="https://github.com/user-attachments/assets/657bd9f6-18b9-4562-ac5f-a332fbe21bdc" alt="devphoto" /></p>
+
+<p>이번 DEV를 준비하고 성공적으로 마무리할 수 있도록 애써주신 모든 동아리원과 회장단 여러분께 진심으로 감사드립니다.</p>
+
+<p>무더운 여름만큼 뜨거웠던 7~8월의 에코노베이션, 앞으로도 많은 기대 부탁드립니다! ✨</p>
+
+<p><br /></p>
+
+<h3 id="ob--">OB 여름 야유회</h3>
+
+<p><img src="https://velog.velcdn.com/images/turtlestory/post/f2497919-c54d-416f-bad8-f3f0b470550c/image.jpg" alt="OB 여름 야유회" /></p>
+
+<p>지난 8월, 에코노베이션 OB 회원분들이 여름 야유회를 다녀왔습니다.
+이번 야유회에서는 축구와 보드게임 등 다양한 활동을 즐기며 함께 웃고 즐기는 시간을 보냈습니다.</p>
+
+<p>저녁에는 맛있는 고기를 구워 먹으며 담소를 나누며 더욱 즐거운 시간을 보내신 것 같네요.</p>
+
+<p>특히 OB 회원분들만의 자리였기에 더욱 뜻깊은 시간이 되었던 것 같습니다.</p>
+
+<p>앞으로도 OB 회원분들의 즐거운 교류가 계속 이어지길 기대합니다! 😄</p>
+
+<p><br /></p>
+
+<h3 id="am--">AM 여름 야유회</h3>
+
+<table>
+  <tbody>
+    <tr>
+      <td>&lt;img src="https://velog.velcdn.com/images/turtlestory/post/4fcd9579-eac2-45c6-8550-80234dd55b6b/image.jpg" alt=’AM 야유회 1’/&gt;</td>
+      <td>&lt;img src="https://velog.velcdn.com/images/turtlestory/post/e792495b-95af-4f4d-9e92-739fbbed117e/image.jpg" alt=’AM 야유회 2’/&gt;</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>8월 23일 ~ 8월 24일, 1박 2일로 AM 회원들이 2차 야유회를 다녀왔습니다.</p>
+
+<p>이번 야유회는 무더운 여름 더위를 날려보고자 계곡으로 다녀왔는데요,
+함께 물놀이를 즐기며 시원하게 힐링하는 시간을 보냈습니다. 🤿</p>
+
+<p>또한 고기를 구워 먹으며 즐거운 저녁 시간을 보냈고,
+늦은 밤에는 야식도 함께 나누며 한층 더 끈끈한 시간을 만들 수 있었습니다.</p>
+
+<p>함께 웃고 즐기며 좋은 추억을 쌓을 수 있었던 뜻깊은 야유회였습니다. 🏖️</p>
+
+<p><br /></p>
+
+<h3 id="hello-econo">Hello, ECONO!</h3>
+
+<table>
+  <tbody>
+    <tr>
+      <td>&lt;img src="https://velog.velcdn.com/images/turtlestory/post/d0ac0cb1-5f28-47a9-a57b-413284152b71/image.png" alt="HelloEcono1"/&gt;</td>
+      <td>&lt;img src="https://velog.velcdn.com/images/turtlestory/post/087a5994-bca8-4b4c-9a84-b2e8407e8910/image.png" alt="HelloEcono2"/&gt;</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>8월 30일, 제6회 Hello, ECONO! 행사가 다시 한번 성공적으로 열렸습니다.</p>
+
+<p>이번 행사에서는 연사분들의 깊이 있는 발표와 함께,
+참석자들 간의 활발한 교류 속에서 새로운 아이디어와 시너지를 얻을 수 있었습니다.💡</p>
+
+<p>다양한 경험과 인사이트를 공유하며 한층 더 성장하는 자리가 되었고,
+참여해주신 모든 분들 덕분에 더욱 의미 있는 시간이 되었습니다. 🚀</p>
+
+<p><br /></p>
+
+<hr />
+
+<p><br /></p>
+
+<p>에코노 뉴스 7~8월호는 여기까지입니다.</p>
+
+<p>무더운 여름이 지나고, 9월이 다가왔습니다.
+시원한 바람처럼 활기찬 에너지로 2학기를 맞이하시길 바랍니다.</p>
+
+<p>다가올 9월호에서도 더 풍성한 소식으로 찾아뵙겠습니다! 🍂</p>]]></content><author><name>joonhyun</name></author><category term="ECONO_NEWS" /><category term="ECONO_NEWS" /><summary type="html"><![CDATA[에코노 뉴스 7~8월호]]></summary></entry><entry><title type="html">[2025 SUMMER DEV] 등산객 안전을 위한 스마트 산행 서비스 ‘산결’, 4!팀</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_4!.html" rel="alternate" type="text/html" title="[2025 SUMMER DEV] 등산객 안전을 위한 스마트 산행 서비스 ‘산결’, 4!팀" /><published>2025-08-07T00:00:00+09:00</published><updated>2025-08-07T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C%20%ED%9A%8C%EA%B3%A0%EB%A1%9D_4!</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_4!.html"><![CDATA[<h2 id="summer-dev--------4">[2025 SUMMER DEV] 등산객 안전을 위한 스마트 산행 서비스 ‘산결’, 4!팀</h2>
+
+<h3 id="section">프로젝트 소개</h3>
+
+<p><br />
+<img src="https://velog.velcdn.com/images/dubu1001/post/ae9667cf-1624-430f-b1d2-7e351762664b/image.png" alt="4!팀 대표사진" />
+<br /><br /></p>
+
+<p>산결은 등산객들이 즐거운 산행이 될 수 있도록 돕고, 안전 사고 시 빠른 신고와 대처가 가능하게끔 돕는 산행 서비스 입니다.</p>
+
+<h3 id="section-1">팀원 소개</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/dubu1001/post/bb5f7d13-62b8-428b-bb58-342b93a96bcf/image.png" alt="4! 건규" width="180" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/dubu1001/post/3c94a1af-e130-4938-9862-5793827ddc2b/image.png" alt="4! 정빈" width="180" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/dubu1001/post/fea5d0b1-e413-4b27-aad6-ff6b26c58de1/image.png" alt="4! 우재" width="180" /&gt;</th>
+      <th style="text-align: center">&lt;img src="https://velog.velcdn.com/images/dubu1001/post/b5b7f46e-e2f7-4ee4-86e7-35b81b49aca3/image.png" alt="4! 의찬" width="180" /&gt;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">FE    건규</td>
+      <td style="text-align: center">BE    정빈</td>
+      <td style="text-align: center">BE    우재</td>
+      <td style="text-align: center">INFRA    의찬</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<h3 id="section-2">인터뷰</h3>
+
+<p><strong>Q. 프로젝트를 소개해주세요!</strong></p>
+
+<p>A. 산행 사고가 매년 10,000건 이상 발생한다는 사실을 아시나요? 산결은 등산객들의 안전한 산행을 위한 웹 애플리케이션입니다. 산행 코스 검색, 실시간 위치 추적, 안전 매뉴얼 제공 등 다양한 기능을 통해 등산의 안전성을 높이고 비상 상황에 대비할 수 있도록 도와줍니다!</p>
+
+<p><strong>Q. 프로젝트 하면서 어떤 문제를 겪었나요?</strong></p>
+
+<p>A. 건규(FE): 앱 개발을 처음 시도하면서 빠른 실험과 변경사항 반영을 위해 웹뷰 기술을 선택했습니다. 하지만 웹과 앱 간 통신에서 예상치 못한 문제들을 마주했습니다. 기본 웹뷰 통신은 단방향 이벤트 기반으로, 메시지 형식 정의의 어려움, 웹이 준비되지 않은 상태에서의 앱의 송신 메시지 손실, 전달 성공 여부 확인 불가능 등의 한계가 있었습니다. 이를 해결하기 위해 TCP 프로토콜을 참고하여 메시지 ID 기반의 요청-응답 매칭 시스템과 3-way handshake 방식의 연결 확인 로직을 구현했습니다. WebviewBridge 클래스를 통해 양방향 통신을 추상화하고, 콜백 기반의 비동기 처리로 신뢰성 있는 웹-앱 간 통신 환경을 구축할 수 있었습니다. 이를 통해 안정적인 웹뷰 기반 하이브리드 앱 서비스를 제공할 수 있게 되었습니다</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 하기 전후 달라진 점이 있다면?</strong></p>
+
+<p>A. 정빈(BE): “문제를 푸는 방법은 꼭 복잡할 필요는 없다. 때론 가장 단순한 방법이 최고의 해답이 된다.”
+프로젝트를 시작하기 전과 끝난 지금을 돌아보면, 가장 크게 달라진 점은 ‘문제를 해결할 수 있는 경험’이 쌓였다는 것입니다. 어느 개발자 선배에게 “개발자에게 경험은 곧 자산”이라는 말을 들은 적이 있습니다. 100번 책을 읽는 것보다, 단 한 줄의 코드를 실행하며 오류를 해결해 나가는 과정이 훨씬 값진 경험이라는 뜻이겠죠. 이번 프로젝트는 그 말을 온몸으로실감하게 만든 시간들이었습니다. 운영 환경에서만 발생하는 예외적인 오류, 인프라와의 협업에서 생긴 설정 충돌, 배포 후 백엔드만 자주 롤백되던 현상까지. OAuth, JWT Interceptor, CI/CD 배포 과정에서 반복되는 에러를 해결하며 저 스스로도 조금씩 단단해졌고, 이전보다 프로젝트를 바라보는 시야도 넓어졌습니다. 그중에서도 가장 기억에 남는 이슈는 Mountain 이라는 엔티티명 때문에 데이터 삽입이 되지 않았던 문제였습니다. 로컬환경에서는 문제없이 동작하던 코드가, 배포 환경인 AWS RDS(MySQL)에서는 insert가 되지 않았습니다. 이유는 단순했습니다. RDS에서 대소문자 구분 설정이 활성화되어 있어, 실제 테이블명은 mountain 이었는데 코드에서는 Mountain으로 참조하고 있었던 것이죠. 이 경험을 통해 운영 환경의 설정 하나가 서비스 동작에 얼마나 큰 영향을 미칠 수 있는지 몸소 느낄 수 있었습니다. 또한, 환경별 차이를 고려한 사전 점검의 중요성도 함께 배웠습니다. 그리고 또 하나, 메서드명과 내부 로직이 어긋나 생긴 코드 품질 이슈도 있었습니다. 처음엔 복잡하게 로직을 손보려 했지만, 메서드명을 명확하게 바꾸는 것만으로도 문제를 해결할 수 있었습니다. 이처럼 문제를 해결하는 방법은 반드시 복잡할 필요는 없으며, 때로는 단순하고 명확한 시각이 더 효과적일 수 있다는 점도 배울 수 있었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 시작하는 팀에게 전해줄 꿀팁을 말해주세요!</strong></p>
+
+<p>A. 우재(BE): 의사소통을 열심히, 그리고 새로운 기술적인 도전 3가지를 하라는 말씀을 드리고 싶습니다. 저희 팀은 매일 데일리 스크럼이라는 자신의 업무 진행 상황을 공유하고, 사담을 나누는 시간을 가지고 있습니다. 처음에는 이게 효율적일까 싶었지만, 프로젝트를 하면서 내 동료가 무슨 일을 현재 하고 있고, 어떤 문제점을 마주하고 있는 지 즉각적으로 알기가 힘들었습니다. 이런 내용들을 데일리 스크럼을 통해 공유하다보니 내가 모르던 사실을 알게되는 것은 물론이고, 동료가 마주하고 있는 문제점에 대해서 새로운 해결방안을 제시할 수 있어서 협업의 능률이 올라가는 것 같습니다! 개인적으로 개발자란 본인의 존재감을 끊임없이 어필 해야한다고 생각하기에 새로 시작하는 팀들도 데일리 스크럼을 가져보시는 걸 추천드립니다! 그리고 프로젝트를 하다보면 이전에 했던 프로젝트와 비슷한 코드를 작성하는 경우가 많이 있습니다. 새로 시작하는 프로젝트가 이전 프로젝트와 비교해서 본인에게 기술적인 도전이 없었다면 사실 의미있는 프로젝트라고 생각하지 않습니다. 그렇기에 새로운 기술적인 도전 3가지를 해보라고 말씀드리고 싶습니다. 레퍼런스를 찾아보고, 선배들의 레포를 찾아보면서 딱 3가지만 새로운 기술을 제대로 공부하고 프로젝트에 적용시키면 그것만으로도 충분히 성장이 많이 될 것입니다! 그래서 다들 겁먹지 마시고 최소한 3가지 기술적인 도전을 하시는 걸 추천드립니다!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트에서 개발자로 참여한 경험을 설명해주세요. 어떤 역할을 맡았고, 주요 기술 스택은 어떻게 구성되었나요?</strong></p>
+
+<p>A. 의찬(BE): 저는 엔지니어 역할을 맡았습니다. 개발자가 코드를 아무리 잘 작성하더라도 실행시킬 환경이 없으면 서버는 돌아가지 않는데요. 저는 4!팀에서 개발자들이 작성한 코드가 잘 돌아갈 수 있도록 운영 및 유지보수하였습니다. 저희 프로젝트 상황에 맞는 실행 환경을 선택하고 개발자는 비지니스 코드만 작성할 수 있도록 하는게 목표였습니다.  조금 더 설명하면 저희 프로젝트는 AWS의 ECS에서 실행되었는데 이 환경을 세팅하고, 환경변수같은 위험한 키값을 안전하게 관리하기, 깃허브에 새로운 버전의 코드가 올라오면 자동으로 업데이트 되게 하기 (CICD 파이프라인), 코드로 인프라를 관리하기(IaC), 모니터링 대시보드 구축 등을 맡았습니다. 직접 비지니스 코드를 작성하진 않았지만 프론트, 백엔드와 상호작용을 하였는데요, 프론트 개발자와 함께 Next js의 standalone 모드를 적용해서, Docker 이미지 최적화 하기, 백엔드 개발자와 함께 로그를 분석하고 장애가 난 지점을 찾아내는 등 흥미로운 경험을 많이 했던거 같네요. 주요 기술 스택으로는 AWS, Docker, Terraform을 사용했습니다.
+(프론트엔드: nextjs, 백엔드: springboot, 인프라: AWS, Docker, Terraform)</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트의 기술적인 도전 과제나 혁신적인 부분은 무엇이었나요?</strong></p>
+
+<p>A. 건규(FE): 이번 앱 개발에서 가장 큰 도전 중 하나는 웹의 ‘툭툭 끊기는’ 네비게이션을 앱처럼 부드럽게 만드는 것이었습니다. 일반적인 웹은 페이지 이동 시 로딩 화면, 흰 화면, 점진적 콘텐츠 로딩으로 인해 앱과 같은 매끄러운 사용자 경험을 제공하기 어려웠습니다. 초기에는 스크린마다 웹뷰를 두고 앱이 네비게이션을 담당하도록 했지만, 이는 TanStack Query의 캐싱 장점을 활용할 수 없고 저장소 공유 문제, 복잡도 증가 등의 한계가 존재하였습니다. 이를 해결하기 위해 웹에서 네비게이션을 처리하되 앱처럼 동작하도록 구연하도록 했습니다. 화면 밖에 다음 페이지를 미리 렌더링하여 그려두고, Next.js의 prefetch를 활용해 성능을 최적화했습니다. 페이지 이동 시에는 미리 그려진 화면을 슬라이딩 애니메이션으로 전환하여 자연스럽게 다음 화면이 보이도록 하였습니다.결과적으로 웹의 캐싱 장점과 앱의 부드러운 UX를 모두 확보할 수 있었습니다!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 팀 내에서 코드 리뷰 및 테스트 프로세스는 어떻게 이루어졌나요? 코드 품질과 안정성을 유지하기 위해 어떤 노력을 기울였나요?</strong></p>
+
+<p>A. 우재(BE): 저희 팀의 코드 리뷰 프로세스는 이슈 생성 -&gt; PR 및 리뷰 요청 -&gt; 리뷰 진행 -&gt; 피드백 반영 후 리뷰 다시 요청 -&gt; Merge 순서로 이뤄졌습니다. 정빈님과 저는 리뷰를 진행하면서 서로간에 몰랐던 지식을 열정적으로 가르쳐주고, 동료가 남긴 리뷰를 허투루 보내지 않고 진지하게 받아들이는 태도로 임했습니다. 남이 본인의 코드를 보고 생각을 적어준다는 것이 쉬운 것이 아니기에 동료가 나를 위해서 소비해준 시간을 의미있게 보내고자 노력했습니다. 그리고 저희가 지향하는 코드는 최대한 알기 쉬게끔, 즉 가독성이 좋은 코드를 작성하고자 노력했습니다. 결국 프로그래밍도 하나의 언어로 문서를 작성해나가는 것이다보니, 가독성을 우선시하게 되었습니다. 메소드나 변수명을 알아보기 쉽게끔 작성을 하고, 최대한 메소드는 한 가지의 기능만 하도록 쪼개는 등 동료가 코드를 읽을 때 어려움이 없게끔 작성하도록 노력하였습니다. 이러한 노력이 동료가 더욱 좋은 리뷰를 주고 받는 결과를 만들어내어 협업이 잘 될 수 있는 환경이 되었습니다. 혹시나 코드리뷰에 대해서 고민하고 있는 팀이 있다면, 동료가 봤을 때 코드를 읽기 어려운 건 아닌지 고민해 보시는 걸 추천드립니다!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 팀 내 협업에서 문제는 없었는지 궁금합니다!</strong></p>
+
+<p>A. 정빈(BE): 우리가 한 것은 애자일이 아니었다. “애자일의 핵심은 빠른 개발이 아니라 유연한 개발이었다.”
+이번 프로젝트에서 우리 팀은 외부 협력업체의 기획과 함께 개발을 진행했습니다. 그러나 기획은 예상보다 자주 바뀌었고, 초기에는 어떻게 대응해야 할지 몰라 한동안 개발에 제대로 착수하지 못했습니다. 계속 변경되는 와이어프레임과 정리되지 않은 정책들로 인해 혼란을 겪었고, 자연스럽게 팀 내부에는 불만이 쌓이기 시작했습니다. 당시 우리는 ‘애자일 방법론’을 도입하고 스프린트를 계획했지만, 돌이켜보면 그것은 애자일의 겉모습만 흉내낸 것이었습니다. 빠르게 개발하는 데에만 집중했지, 변화에 유연하게 대처하려는 마음가짐은 부족했습니다. 하지만 시행착오를 겪으며 점차 방향을 잡기 시작했습니다. 기획이 완전히 확정되기를 기다리기보다는, 변경 가능성을 염두에 두고 확장성과 유연성을 고려한 코드 구조를 설계하기 시작했습니다. 또, 초기에는 API 명세나 ERD 설계를 할 때 스프린트 범위를 넘어서 과도하게 미리 설계하려는 경향이 있었는데, 이는 오히려 기획 변경 시 리스크를 키우는 원인이 되었습니다. 이후에는 매 스프린트의 범위 안에서만 설계하고 구현하는 방식으로 전환하면서 훨씬 안정적인 흐름을 만들 수 있었습니다. 이 경험을 통해 진정한 애자일은 단순히 ‘빠른 개발’이 아니라, 변화에 유연하게 대처하고, 그 속에서 지속적으로 개선해 나가는 과정임을 배웠습니다. 그리고 그 유연함은 결국 소통으로부터 비롯된다는 것도 크게 깨달았습니다.</p>
+
+<p><br /></p>
+
+<p><img src="https://velog.velcdn.com/images/dubu1001/post/e2f33c24-8a29-4752-8a45-8db866ffdc68/image.png" alt="4!팀 추가사진" />
+<br />
+<br /></p>
+
+<p>지금까지 등산객의 안전을 책임지는 스마트 산행 서비스 ‘산결’을 개발한 4!팀의 이야기를 전해드렸습니다. 실시간 위치 추적부터 긴급 상황 대응까지, 기술을 통해 안전한 산행 문화를 만들어가려는 노력이 무척 인상적이었는데요. 앞으로도 산결이 더 많은 사람들에게 도움이 되는 서비스로 성장하길 기대하겠습니다! 🏔️</p>]]></content><author><name>joonhyun</name></author><category term="SUMMER/WINTER_DEV" /><category term="dev" /><summary type="html"><![CDATA[[2025 SUMMER DEV] 등산객 안전을 위한 스마트 산행 서비스 ‘산결’, 4!팀]]></summary></entry><entry><title type="html">[2025 SUMMER DEV] 살아 움직이는 사물에 맞서 동방을 탈출하는 게임 ‘지금 우리 동방은’, SEED팀</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_SEED.html" rel="alternate" type="text/html" title="[2025 SUMMER DEV] 살아 움직이는 사물에 맞서 동방을 탈출하는 게임 ‘지금 우리 동방은’, SEED팀" /><published>2025-08-07T00:00:00+09:00</published><updated>2025-08-07T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C%20%ED%9A%8C%EA%B3%A0%EB%A1%9D_SEED</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_SEED.html"><![CDATA[<h2 id="summer-dev-----------seed">[2025 SUMMER DEV] 살아 움직이는 사물에 맞서 동방을 탈출하는 게임 ‘지금 우리 동방은’, SEED팀</h2>
+
+<h3 id="section">프로젝트 소개</h3>
+
+<p><br />
+<img src="https://velog.velcdn.com/images/dubu1001/post/614fa4d2-8691-42b7-9673-b6760a589abf/image.png" alt="SEED팀 대표사진" />
+<br /><br /></p>
+
+<p>‘지금 우리 동방은’ 프로젝트는 플레이어가 미지의 이유로 정보화 본부에 갇혀, 살아 움직이는 사물에 맞서 탈출해야 되는 3인칭 퍼즐 어드벤처 게임 입니다.</p>
+
+<h3 id="section-1">팀원 소개</h3>
+
+<p><img src="https://github.com/user-attachments/assets/3f3f89fa-1cb9-4a0b-aa47-1dd6e8038ecc" alt="SEED팀 사진" /></p>
+
+<p>SEED팀은 Game 은상님, 현규님, 민규님으로 구성되어 있습니다!</p>
+
+<p><br /></p>
+
+<h3 id="section-2">인터뷰</h3>
+
+<p><strong>Q. 프로젝트를 소개해주세요!</strong></p>
+
+<p>A. 세 명의 게임 개발자가 모여 열정을 담아 완성한 첫 번째 작품입니다. 각자의 기획 아이디어를 모아, 모두가 만족할 수 있는 방향으로 게임을 완성했습니다. 개발을 처음 시작한 만큼, 게임에서 자주 볼 수 있는 다양한 기능들을 직접 구현해보고자 했습니다. 플레이어, 몬스터, 보스, 카메라 등 주요 요소들을 분담하여 각각 개발하였고, 이를 통해 게임의 기본적인 시스템을 완성할 수 있었습니다. 저희 게임은 3인칭 퍼즐 어드벤처 장르로, 플레이어가 미지의 이유로 ‘정보화본부’에 갇혀 살아 움직이는 사물들과 전투를 벌이며 탈출을 시도하는 스토리를 가지고 있습니다. 게임은 3층 동방을 시작으로 강의실, 서버실, 사무실 등을 차례로 탐험하면서 무기와 단서를 파밍하고, 다양한 몬스터들과 맞서 싸우게 됩니다. 최종적으로 서버실에 있는 보스 컴퓨터를 처치하면 탈출에 성공할 수 있습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 하면서 어떤 문제를 겪었나요?</strong></p>
+
+<p>A. 저희는 유니티를 활용한 3D 게임 개발이 처음이었기 때문에, 프로젝트를 시작하기에 앞서 먼저 공부를 진행한 후 본격적인 개발에 들어가기로 결정했습니다. 이로 인해 프로젝트의 전체적인 진행 속도는 다소 저희 초기 계획보다 느려졌습니다. 또한 개발 과정에서도 초기에 기획을 완벽히 확정하지 않은 채 부분적으로 개발을 시작하다 보니, 중간중간 기획이 정리되지 않아 개발을 원활히 이어가지 못하는 어려움이 있었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 하기 전후 달라진 점이 있다면?</strong></p>
+
+<p>A. 유니티의 카메라, Collider, 이벤트 함수 등 이전에는 깊게 다루지 않았던 여러 기능을 이번에 직접 활용해 보면서 더욱 익숙해지고 능숙하게 다룰 수 있게 되었습니다. 또한, 2D 게임 개발 과정에서 스킬 사용 방향이나 투사체 발사 방향 등 이전까지는 미처 생각하지 못했던 부분을 깊이 있게 이해하게 되었습니다. 특히 팀 프로젝트를 진행하며 Git과 GitHub를 처음 사용하게 되었는데, 지속적인 협업 경험을 통해 이제는 자연스럽게 활용할 수 있게 되었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 시작하는 팀에게 전해줄 꿀팁을 말해주세요!</strong></p>
+
+<p>A. 우선 초반 기획 진도를 최대한 많이 빼두는 게 정말 중요합니다. 기획이 늦어지면 전체 일정이 꼬이기 쉽기 때문에 초기에 큰 틀을 빠르게 잡는 게 좋습니다. 또 효율적인 회의를 위해서는 미리 다음 회의의 주제와 Todo List, 회의 시간을 정해두면 회의가 훨씬 깔끔하고 집중도 있게 진행됩니다. 만약 일정이 많이 늦어졌다면, 방학을 활용해서 하루 단위로 스프린트를 짜고 몰입해서 진행하는 것도 진도를 따라잡는 데 큰 도움이 될 겁니다. 실제로 저희 팀도 일정이 살짝 늦어졌기에 스프린트를 하였더니 개발 속도가 정말 빨라진 것을 느꼈습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. Summer Dev 프로젝트에서 개발자로 참여한 경험을 설명해 주세요. 어떤 역할을 맡았고, 주요 기술 스택은 어떻게 구성되었나요?</strong></p>
+
+<p>A. 은상(Game): Summer Dev 프로젝트에서 개발자로 참여하면서, C#과 Unity를 활용한 게임 개발을 맡았습니다. 주로 플레이어 컨트롤, UI 인터랙션, AI 로직 구현 등 클라이언트 측 기능을 중심으로 개발했습니다. 주요 기술 스택은 Unity 엔진(C# 기반)을 중심으로 구성되었고, Git을 활용하여 협업을 진행했습니다. 협업 과정에서는 팀원들과 기능 분담을 통해 효율적인 작업 분배를 수행했습니다. 프로젝트를 통해 Unity 개발 실력을 실전으로 다지고, 협업 경험도 많이 쌓을 수 있었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 개발자로서의 역량 향상을 위해 어떤 노력을 기울였으며, 이 프로젝트를 통해 어떤 기술적 성장을 이루었나요?</strong></p>
+
+<p>A. 현규(Game): 저희는 처음으로 3D 게임 개발에 도전하다 보니, 일반적인 게임이라면 당연히 갖추고 있어야 할 기본적인 기능들을 우선적으로 구현하는 데 집중하였습니다. 또한 실력 향상을 위해 가능한 한 다양한 기능들을 직접 구현해보는 것을 목표로 삼았습니다. 그렇기 때문에 고난도의 기술을 사용하기보다는, 다양한 레퍼런스를 참고하면서 학습하고 적용해나가는 방식으로 개발을 진행했습니다. 게임 개발에서는 개발자의 개성이 강하게 반영되기 때문에, 같은 기능이라도 100명의 개발자가 있다면 100가지의 구현 방식이 있을 수 있다는 말이 있을 정도입니다. 이러한 특성을 이해하며, 저희는 구글링을 통해 다양한 사례를 찾아보고, 비슷한 기능을 구현한 다른 개발자들의 코드와 접근 방식을 참고하면서 개발에 반영하였습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 본인 팀만의 특별한 협업 방식이 있나요? 있다면 소개해 주세요.</strong></p>
+
+<p>A. 민규(Game): 앞서 말씀드렸듯이, 저희는 전반적으로 개발 진행 속도가 느린 편이었습니다. 이를 극복하기 위해 방학 기간을 활용하여, 매일 개발할 내용을 미리 계획하고 정해진 시간에 모여 회의를 진행하며 다음 개발 과제를 정하는 방식으로 진행하였습니다.이처럼 스프린트를 짧고 밀도 있게 가져가다 보니 개발 속도가 점차 빨라졌고, 회의 또한 짧고 핵심적인 내용 위주로 진행되어 효율적으로 진행할 수 있었습니다. 개인적으로도 이러한 방식이 팀 개발에 매우 효과적이었다고 느껴 강추합니다.</p>
+
+<p><br />
+<br /></p>
+
+<p>지금까지 살아 움직이는 사물에 맞서 동방을 탈출하는 게임, ‘지금 우리 동방은’을 개발한 SEED팀의 이야기를 전해드렸습니다.
+처음 도전한 3D 게임 개발이었지만, 꾸준한 학습과 스프린트 협업을 통해 멋진 결과물을 완성한 과정이 인상 깊었는데요. 앞으로도 SEED팀이 더 재미있는 게임을 만들어 나가길 기대하겠습니다! 🎮</p>]]></content><author><name>joonhyun</name></author><category term="SUMMER/WINTER_DEV" /><category term="dev" /><summary type="html"><![CDATA[[2025 SUMMER DEV] 살아 움직이는 사물에 맞서 동방을 탈출하는 게임 ‘지금 우리 동방은’, SEED팀]]></summary></entry><entry><title type="html">[2025 SUMMER DEV] 생성형 AI를 이용한 어린이 동화 창작 서비스 ‘IngQ’, 맥모닝팀</title><link href="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_%EB%A7%A5%EB%AA%A8%EB%8B%9D.html" rel="alternate" type="text/html" title="[2025 SUMMER DEV] 생성형 AI를 이용한 어린이 동화 창작 서비스 ‘IngQ’, 맥모닝팀" /><published>2025-08-07T00:00:00+09:00</published><updated>2025-08-07T00:00:00+09:00</updated><id>https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C%20%ED%9A%8C%EA%B3%A0%EB%A1%9D_%EB%A7%A5%EB%AA%A8%EB%8B%9D</id><content type="html" xml:base="https://jnu-econovation.github.io/jekyll-theme-yat/summer/winter_dev/2025/08/07/%EC%8D%B8%EB%A8%B8%EB%8D%B0%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D_%EB%A7%A5%EB%AA%A8%EB%8B%9D.html"><![CDATA[<h2 id="summer-dev--ai------ingq-">[2025 SUMMER DEV] 생성형 AI를 이용한 어린이 동화 창작 서비스 ‘IngQ’, 맥모닝팀</h2>
+
+<h3 id="section">프로젝트 소개</h3>
+
+<p><br />
+<img src="https://velog.velcdn.com/images/dubu1001/post/ca06360b-cc94-4aa1-997d-cd1f7e071cbf/image.png" alt="맥모닝팀 대표사진" />
+<br /><br /></p>
+
+<p>IngQ는 저연령층의 사고력 증가 및 독서 흥미 유도를 위한 생성형 AI 기반 동화 만들기 앱입니다.</p>
+
+<h3 id="section-1">팀원 소개</h3>
+
+<p><img src="https://github.com/user-attachments/assets/479013c3-b0a0-4003-905d-07e7bab6343a" alt="맥모닝팀 사진" /></p>
+
+<p>맥모닝팀은 FE 지유님, BE 인재님, AI 준서님으로 구성되어 있습니다!</p>
+
+<p><br /></p>
+
+<h3 id="section-2">인터뷰</h3>
+
+<p><strong>Q. 프로젝트를 소개해주세요!</strong></p>
+
+<p>A. 지유(FE): ingQ는 저연령층을 위한 AI 동화책 생성 어플리케이션입니다. 단순히 재미있는 이야기를 보여주는 것에서 그치는 것이 아니라, 아이들이 선택을 통해 스토리를 직접 만들어가고, 그 과정에서 자연스럽게 생각하는 힘을 기를 수 있도록 기획을 구체화했습니다. 처음에는 어떻게 하면 아이들이 부담 없이 접근할 수 있을까에 대한 고민으로 시작했습니다. 그래서 복잡한 설정 없이도 간단한 선택만으로 동화를 만들 수 있도록 구성했고, 줄거리도 직관적이고 간결하게 정리해주는 방식으로 기획을 구체화했습니다. 아이들의 몰입을 높이기 위해, 이야기 진행 중간마다 다양한 선택지를 제공하고, 선택 후에는 “왜 이걸 골랐나요?” 라는 질문을 통해 자연스럽게 생성된 이야기에 대한 사고를 유도할 수 있도록 했습니다. 이 부분은 단순히 스토리를 읽는 것이 아니라, 본인이 선택한 이유를 고민하고 이를 통해 독서에 있어 중요한 요소인 사고력을 길러내고자 했습니다. 무엇보다도, 내가 만든 이야기를 끝으로 끝나는 것이 아니라, 다른 친구들이 만든 이야기들을 읽어보고, 같은 테마로 자신만의 동화를 다시 만들어볼 수 있게 구성하면서 콘텐츠의 확장성과 참여도를 함께 높이고자 했습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 하면서 어떤 문제를 겪었나요?</strong></p>
+
+<p>A. 지유(FE): 저는 이번 프로젝트가 TypeScript 기반으로 프로젝트 초기 세팅부터 전반적인 개발까지 직접 주도해본 첫 경험이었습니다. 특히 “어디까지 타입으로 관리해야 하는가”에 대한 기준을 세우고 유지하는 과정에서 많은 고민이 있었습니다. 처음에는 명확한 타입 설계 기준 없이 개발을 시작했기 때문에, 점차 타입 정의가 중복되거나 지나치게 세분화되어있지 않은지 고민하기도 했습니다. 이러한 경험을 통해 프로젝트 초반에 타입의 범위와 추상화 수준을 명확히 정해두는 것이 얼마나 중요한지 깨닫게 됐습니다. TypeScript의 장점을 제대로 활용하려면 단순히 타입을 선언하는 것을 넘어서서, 설계 단계에서 구체적인 계획을 세워야만 한다는 걸 알게 됐습니다. 특히 위에서 말했던 이야기를 진행하는 StroyProgress 부분을 리팩토링하면서 타입이 가지고 있는 장점과 활용 방법에 대해서 고민해볼 수 있었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 하기 전후 달라진 점이 있다면?</strong></p>
+
+<p>A. 준서(AI): 지금까지 저는 개발 과정에서 주로 다른 분야와 협업해 왔지만, 이번 프로젝트에서는 처음으로 같은 분야의 사람들과 협업하게 되었습니다. 혼자 개발할 땐 잘 몰랐는데, 같은 분야 개발자와 같은 파일을 만지고 나니 제가 놓치고 있던 부분과 부족한 점이 하나둘 보이기 시작했습니다. 그중 하나가 코드 컨벤션에 관한 부분이었습니다. 어느 날 다른 팀원의 PR을 보는데, 제가 작성한 코드에 ‘들여쓰기만’ 수정된 변경 사항이 잔뜩 보였습니다. 그제서야 서로 코드 스타일이 제각각이라 불필요한 수정이 생기고 있다는 걸 깨달았고, “이런 걸 어떻게 맞춰야 하지?”라는 의문이 들었습니다. 찾아보니 .eslintrc.js와 .prettierrc.js에 원하는 설정을 넣고, package.json에서 스크립트로 자동화를 걸어두면 서로의 코드 스타일을 맞출 수 있다는 걸 알게 됐습니다. 그리고 또 하나는 전역 상태 관리의 필요성입니다. 이야기 글자 크기를 바꾸는 단순한 기능을 구현하는데, 메뉴 컨테이너 → 상단 네브바 → 페이지 → 페이지 컨테이너로 props를 계속 전달해야 했습니다. 사실 프로젝트에 zustand가 이미 깔려 있었지만, 당시엔 전역 상태 관리 방법을 몰라 쓰지 못했죠. 그 결과, 불필요하게 깊은 컴포넌트 트리를 따라 데이터를 넘겨야만 했습니다. 이러한 경험들을 바탕으로, 저는 제가 작성한 코드에서의 추가적인 문제점들도 하나씩 분석해 나갔습니다. 프로젝트 전에는 단순히 팀원의 코드 스타일과 구조를 따라 하면서 코드를 짰기 때문에 “왜 이런 방식을 사용했을까?”라는 의문을 갖지 못했습니다. 하지만 이번 협업을 거치면서, 왜 TypeScript를 사용하는지, 어떻게 react-query를 적용하는지와 같은 기술적 선택의 이유를 고민하고 이해하게 되었습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트를 시작하는 팀에게 전해줄 꿀팁을 말해주세요!</strong></p>
+
+<p>A. 인재(BE): 에코노에 들어와 시작한 프로젝트는 낯선 사람들과 함께 만들어가는 협업 프로젝트였습니다. 이 과정에서 느낀 점 중 하나는, 자신의 생각을 말이나 글로 “정확하게 표현하는 능력”이 엄청 중요하다는 것이었습니다. 첫 번째 화면을 두고 누군가는 “홈 화면”, “홈페이지”, “메인페이지”라고 불렀습니다. 화면을 부르는 이름, 각 기능에 대한 표현들 처음엔 사소한 일들이라 넘어갔던 용어들이 시간이 지나면서 작은 오해를 쌓고 결국엔 갈등의 씨앗이 될 수 있다는 점을 알게 되었습니다. 그래서 저는 “용어 사전”을 만들어 팀 내부에서 사용하는 용어를 통일하는 것을 꼭 추천하고 싶습니다. 또, 개발을 진행하다 보면 처음 듣는 기술이나 개념을 마주칠 일이 많은데, 그런 기술들을 지나치지 말고 직접 공부해보고 적용해보는 태도도 중요하다고 생각합니다.
+이러한 과정 속에서, 제가 생각했던 것보다 더 큰 개인적인 성장을 경험할 수 있었습니다. 한 가지 더 전하고 싶은 것은, 스프린트 백로그를 활용해 일정을 리마인드하며 관리하는 방식입니다. 프로젝트를 하다 보면, 처음 계획한 일정에서 벗어나는 일이 자주 발생합니다. 이럴 때 일주일 단위로 계획을 세우고, 전체 일정을 조율하는 리더 역할이 있는 것이 큰 도움이 되었습니다. 대학생의 경우 학업이나 대외활동이 병행되다 보니 프로젝트를 잠깐 잊고 지내는 경우도 종종 발생합니다. 그럴 때 팀 내 누군가가 일정을 지속적으로 리마인드해주는 등대 같은 역할을 맡는다면, 훨씬 안정감 있게 프로젝트를 이어갈 수 있습니다.
+새로운 프로젝트 화이팅입니다!!</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트 개발 중 어려움을 겪은 경험이 있나요? 어떻게 해결했으며, 그 과정에서 얻은 교훈은 무엇인가요?</strong></p>
+
+<p>A. 인재(BE): IngQ 프로젝트에서 BE는 AWS EC2 서버를 사용했고, Docker Compose를 이용해 FastAPI, Nginx, Certbot을 모두 컨테이너로 구성했습니다. 이전에는 EC2에 직접 Nginx를 설치한 후, 로컬에서 Certbot을 실행해 인증서를 발급받았는데, 이를 모두 컨테이너 환경으로 옮기면서 예상치 못한 문제가 발생했습니다. 바로 Certbot이 인증서를 발급하고 종료되면, 인증서 파일 자체도 함께 사라져버리는 것이었습니다. 결국 Nginx 컨테이너는 SSL 인증서를 참조할 수 없었고 HTTPS 연결도 안되었습니다.
+문제를 해결하기 위해 로컬과 컨테이너 간의 볼륨 연결을 살펴보기도 하고, 컨테이너가 아닌 로컬에서 Certbot을 실행하는 방안도 고려해보았습니다. 그러던 중 에코노에 인프라를 잘 아는 분과 이야기하면서 Docker Volume을 명시적으로 생성해 Nginx와 Certbot 컨테이너가 공유할 수 있도록 해보는 건 어떻겠냐는 의견이 나왔고 이를 시도해보기로 했습니다. 결과적으로 Certbot 컨테이너가 종료되더라도 인증서 파일은 Docker Volume에 유지되었고, Nginx는 해당 파일을 통해 정상적으로 SSL을 적용할 수 있었습니다. “모르는게 무엇인지 알고 있다면 해결책은 금방 찾을 수 있을 것이다.” 개발을 하면서 참 많이 들었던 말이었습니다. 모르는게 무엇인지 명확히 정의할 수 없다면, 하고자 하는 작업이 왜 안되는지를 다른 사람에게 설명해보는 과정에서 자신이 놓치고 있는 부분을 발견할 수 있다는 점을 깨달았습니다. 하고자 하는 작업이 잘 안 풀릴 때는 주변 사람의 도움을 받아 내가 모르는 지점을 명확히 해보는 것도 문제 해결의 좋은 출발점이 될 수 있다고 생각합니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 프로젝트의 기술적인 도전 과제나 혁신적인 부분은 무엇이었나요?</strong></p>
+
+<p>A. 지유(FE): 웹 개발 당시 로그인 기능을 구현해본 경험은 있었지만, 이번 프로젝트에서는 앱이 가지고 있는 특수성을 고려하여 앱을 재실행했을 때도 로그인 상태를 유지해야 했습니다. 이전 프로젝트에서 로컬 스토리지를 이용한 로그인 방식을 채택했던 경험을 떠올려, AsyncStorage를 활용해 사용자 정보를 저장하고 불러오는 구조를 선택하여 구현하고자 했습니다. 처음에는 앱이 시작될 때 AsyncStorage에서 저장된 토큰을 불러와 곧바로 홈 화면에 반영하도록 구현했는데, 이 부분에서 문제가 생겼습니다. 로그아웃을 했더라도 스토리지에 남아 있는 인가되지 않은 토큰이 여전히 홈 화면에 반영되고, 그 상태로 API 요청이 전송되면서 계속해서 알 수 없는 오류가 발생했습니다. 처음엔 어디서 문제가 생긴 건지 명확히 감을 잡지 못했지만, 나중에야 스토리지에 있는 값과 실제 로그인 상태를 구분하지 않고 그대로 사용한 것이 문제였다는 걸 파악하게 되었습니다. 이 문제를 해결하기 위해 전역 상태 관리 로직을 도입해, 토큰의 유효성과 로그인 상태를 명확히 분리해서 관리했고, 스토리지에서 불러온 값은 초기 상태로만 사용하고 이후 상태 변화는 전역 상태를 기준으로 동기화하도록 구조를 개선했습니다. 또한, 전역 상태가 변화할 때마다 AsyncStorage 역시도 갱신해주며 비정상적인 종료 시 발생할 수 있는 문제를 차단하며 해결했습니다.</p>
+
+<p><br /></p>
+
+<p><strong>Q. 본인 팀만의 특별한 협업 방식이 있나요? 있다면 소개해 주세요</strong></p>
+
+<p>A. 준서(AI): 여러 의미로 남들보다 ‘일찍’ 개발을 시작했다는 점이 협업에 있어 저희 팀만의 아이덴티티라고 생각합니다. 의도한 건 아니지만, ‘맥모닝’이라는 팀 이름처럼 저희 팀은 맥모닝을 살 수 있는 아침 10시에 남들보다 일찍 모여 회의와 코어타임을 가졌습니다. 아무래도 저녁에 회의를 하는 다른 팀들은 동아리방에 사람이 많으면 방해도 되고, 소란스럽기도 하지만 저희는 조용한 동아리방에서 집중력있게 코어타임을 가질 수 있었습니다. 특히 방학 동안에는 아침 6시에 온라인으로 협업하기도 했습니다. 또한 팀의 목표 중 ‘일찍 기획을 끝내고 빨리 개발에 착수하자’가 있었습니다. 처음에는 기획을 일찍 끝내면 퀄리티가 떨어지지 않을까 걱정을 했습니다. 이런 걱정이 무색하게도, 팀원들이 너무 한쪽 의견에 휩쓸리거나 자기 의견을 너무 고집하는 것 없이 적당히 타협과 조율을 해준 덕분에 몇 번의 회의 만으로 바로 개발을 시작할 수 있었습니다.</p>
+
+<p><br />
+<br /></p>
+
+<p>지금까지 생성형 AI를 활용해 어린이들의 창의력과 사고력을 키워주는 동화 창작 서비스 IngQ를 개발한 맥모닝팀의 이야기를 전해드렸습니다. 
+누구보다 이른 시간부터 함께 고민하고 협업하며, 기술적인 도전과 사용자 경험을 모두 잡아낸것이 인상 깊었는데요. 앞으로도 아이들을 위한 따뜻한 기술로 많은 사람들의 일상에 의미 있는 변화를 만들어가길 기대합니다. 🖋️</p>]]></content><author><name>joonhyun</name></author><category term="SUMMER/WINTER_DEV" /><category term="dev" /><summary type="html"><![CDATA[[2025 SUMMER DEV] 생성형 AI를 이용한 어린이 동화 창작 서비스 ‘IngQ’, 맥모닝팀]]></summary></entry></feed>
